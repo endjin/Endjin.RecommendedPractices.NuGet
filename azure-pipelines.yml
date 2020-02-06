@@ -36,7 +36,8 @@ jobs:
     inputs:
       command: 'pack'
       packagesToPack: 'src/Endjin.RecommendedPractices.NuGet/Endjin.RecommendedPractices.nuspec'
-      versioningScheme: 'byBuildNumber'
+      versioningScheme: 'byEnvVar'
+      versionEnvVar: 'GitVersion.SemVer'
 
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Release Artifacts'
