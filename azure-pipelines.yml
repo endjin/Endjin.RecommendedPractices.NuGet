@@ -25,6 +25,7 @@ jobs:
 #    service_connection_github: $(Endjin_Service_Connection_GitHub)
 
   steps:
+  # GitVersion doesn't work on build agenst without the global tools workaround step
   - template: templates/install.dotnet-global-tools.workaround.yml@recommended_practices
   - template: templates/install-and-run-gitversion.yml@recommended_practices
   - task: NuGetToolInstaller@1
@@ -36,3 +37,8 @@ jobs:
       command: 'pack'
       packagesToPack: 'src/Endjin.RecommendedPractices.NuGet/Endjin.RecommendedPractices.nuspec'
       versioningScheme: 'byBuildNumber'
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Release Artifacts'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
