@@ -1,6 +1,6 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <Target Name="_EndjinSetPackageProjectAndReleaseDetails" DependsOnTargets="InitializeSourceControlInformation" BeforeTargets="PackTask">
+  <Target Name="_EndjinSetPackageProjectAndReleaseDetails" DependsOnTargets="InitializeSourceControlInformation" BeforeTargets="GenerateNuspec">
     <PropertyGroup>
       <PackageProjectUrl Condition="$(PackageProjectUrl) == ''">$(RepositoryUrl)</PackageProjectUrl>
       <PackageReleaseNotes Condition="$(PackageReleaseNotes) == ''">See $(RepositoryUrl)/releases/</PackageReleaseNotes>
