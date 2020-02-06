@@ -28,6 +28,12 @@ jobs:
   # GitVersion doesn't work on build agenst without the global tools workaround step
   - template: templates/install.dotnet-global-tools.workaround.yml@recommended_practices
   - template: templates/install-and-run-gitversion.yml@recommended_practices
+
+  - powershell: |
+      Write-Host "##vso[task.setvariable variable=Endjin_IsPreRelease]$((-not ([string]::IsNullOrEmpty($Env:GITVERSION_PRERELEASETAG))))"
+      Write-Host "##vso[task.setvariable variable=Endjin_Repository_Name]$Env:BUILD_REPOSITORY_NAME"
+    displayName: 'Set Environment Variables'
+
   - task: NuGetToolInstaller@1
     inputs:
       versionSpec: '5.4.0'
@@ -43,3 +49,26 @@ jobs:
     displayName: 'Publish Release Artifacts'
     inputs:
       PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+
+  - task: GithubRelease@0 
+    displayName: 'Create GitHub Release'      
+    condition: and(succeeded(), or(variables['Endjin.ForcePublish'], eq(variables['GitVersion.PreReleaseTag'], '')))
+    inputs:
+      gitHubConnection: endjin
+      repositoryName: $(Endjin_Repository_Name)
+      tagSource: manual
+      tag: $(GitVersion.SemVer) 
+      isPreRelease: $(Endjin_IsPreRelease)
+      assets: |
+          $(Build.ArtifactStagingDirectory)/**
+
+# This will have to wait until Howard can set up a service connection to NuGet.org
+#  - task: NuGetCommand@2
+#    displayName: 'Publish to nuget.org'
+#    condition: and(succeeded(), or(variables['Endjin.ForcePublish'], eq(variables['GitVersion.PreReleaseTag'], '')))
+#    inputs:
+#      command: push
+#      nuGetFeedType: external
+#      publishFeedCredentials: ${{ parameters.service_connection_nuget_org }}
+#      versioningScheme: byBuildNumber
+#      packagesToPush: '$(Build.ArtifactStagingDirectory)/Packages/**/*.nupkg'
