@@ -1,0 +1,10 @@
+<!--
+    Sets the Copyright property, unless it has already been set.
+
+    This property is used in multiple places (e.g., NuGet packaging, and .NET projects).
+-->
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Copyright Condition=" '$(Copyright)' == '' ">Copyright (c) Endjin Limited 2020. All rights reserved.</Copyright>
+  </PropertyGroup>
+</Project>

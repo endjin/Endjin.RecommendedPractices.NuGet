@@ -1,0 +1,83 @@
+<!--
+    Sets properties common to all .NET projects using endjin's conventions
+-->
+
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+ <PropertyGroup>
+    <!--
+      The SDK's targets files will include the processor architecture in the output folder path
+      (e.g., bin\Release\x64) for anything other than the AnyCPU architecture.
+      Unfortunately, when VSTS uses MSTest to run XUnit tests, it ends up looking in the wrong
+      place for the test adapter. Even if a project contains no tests, MSTest/XUnit will
+      still go looking for them, producing errors in the Test section of the Output window.
+      So we force the output location to avoid this.
+
+      A related issue is that the .NET Core-style SDK (MSBuild 15) build seems to want to include the
+      target framework name (e.g. bin\Release\net462).
+
+      All of this makes it somewhat tricky to set variables that need to point directly into
+      the output path. Most notably, the <DocumentationFile> attribute has proven problematic:
+      if you don't explicitly set the OutputPath variable yourself, there's no relible way to
+      specify "Always generated XML doc, and always put it in the build output folder, wherever
+      that might be".
+
+      Finally, the comments in Microsoft.Common.CurrentVersion.targets state that the build
+      tooling does actually expect you to set this stuff yourself, and only picks values for
+      you as a courtesy.
+
+      So for all these reasons, we're specifying our own OutputPath. This enables us to fix
+      the XUnit test runner problem, and it also means it's safe for any of our project files
+      to refer the $(OutputPath).
+    -->
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+ </PropertyGroup>
+
+  <PropertyGroup>
+    <!--
+        With .NET Core 3 or later, the latest language is the default, but for older versions you have to ask for it
+    -->
+    <LangVersion>latest</LangVersion>
+
+    <!--
+        endjin's standard folder layout has the entire namespace represented. The is because it is
+        common for projects that provide dependency injection extension methods to add those to
+        the Microsoft.Extensions.DependencyInjection namespace, in which case there is no single
+        common shared root namespace.
+    -->
+    <RootNamespace />
+
+    <!--
+        If you don't specify a location for the XML documentation, it doesn't appear.
+    -->
+    <DocumentationFile>$(OutputPath)$(TargetFramework.ToLowerInvariant())\$(AssemblyName).xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TreatSpecificWarningsAsErrors />
+    <WarningsAsErrors />
+
+    <!--
+        Disable Roslynator warnings we disagree with.
+        Projects can reinstate this simply by setting:
+        
+        <NoWarn></NoWarn>
+    -->
+    <NoWarn>RCS1029</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DebugType>portable</DebugType>
+    <ci>true</ci>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <CodeAnalysisRuleSet>$(SolutionDir)StyleCop.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+
+  <ItemGroup Condition="$(EndjinDisableCodeAnalysis) != 'true'">
+    <AdditionalFiles Include="$(SolutionDir)stylecop.json" Link="stylecop.json" />
+  </ItemGroup>  
+
+</Project>
