@@ -1,0 +1,37 @@
+<!--
+    NuGet build picks up file of form PackageName.props and injects it at the top of the project.
+
+    If your .csproj file's root element specifies the Sdk itself (which is how Visual Studio sets
+    up new projects):
+
+    <Project Sdk="Microsoft.NET.Sdk">
+
+    These properties files will all be included before anything in your project file is run. If
+    you want to set any properties before these files are processed, use this form:
+
+    <Project>
+
+      <PropertyGroup>
+        <ThisProperty>will be set first</ThisProperty>
+      </PropertyGroup>
+
+      <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.props" />
+
+    If you do this, you must also tell MSBuild where to import the SDK targets file, which is
+    typically the last thing in the file (although you are free to put things after it if you
+    want):
+
+      <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
+    </Project>
+
+    This mechanism is described here:
+    https://docs.microsoft.com/en-us/nuget/create-packages/creating-a-package#include-msbuild-props-and-targets-in-a-package
+
+-->
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Project="$(MSBuildThisFileDirectory)Endjin.Common.Copyright.props" />
+  <Import Project="$(MSBuildThisFileDirectory)Endjin.Common.NuGet.props" />
+  <Import Project="$(MSBuildThisFileDirectory)Endjin.Common.Net.props" />
+
+</Project>
