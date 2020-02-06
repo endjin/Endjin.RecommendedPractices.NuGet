@@ -1,10 +1,11 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <PropertyGroup>
-    <PackageProjectUrl Condition="$(PackageProjectUrl) == ''">$(RepositoryUrl)</PackageProjectUrl>
-    <PackageReleaseNotes Condition="$(PackageReleaseNotes) == ''">See $(RepositoryUrl)/releases/</PackageReleaseNotes>
-  </PropertyGroup>
-
+  <Target Name="_EndjinSetPackageProjectAndReleaseDetails" DependsOnTargets="InitializeSourceControlInformation" BeforeTargets="PackTask">
+    <PropertyGroup>
+      <PackageProjectUrl Condition="$(PackageProjectUrl) == ''">$(RepositoryUrl)</PackageProjectUrl>
+      <PackageReleaseNotes Condition="$(PackageReleaseNotes) == ''">See $(RepositoryUrl)/releases/</PackageReleaseNotes>
+    </PropertyGroup>
+  </Target>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0">
