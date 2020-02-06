@@ -20,9 +20,9 @@ jobs:
   pool:
     vmImage: 'ubuntu-latest'
 
-  variables:
-    service_connection_nuget_org: $(Endjin_Service_Connection_NuGet_Org)
-    service_connection_github: $(Endjin_Service_Connection_GitHub)
+#  variables:
+#    service_connection_nuget_org: $(Endjin_Service_Connection_NuGet_Org)
+#    service_connection_github: $(Endjin_Service_Connection_GitHub)
 
   steps:
   - template: templates/install-and-run-gitversion.yml@recommended_practices
