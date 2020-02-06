@@ -55,7 +55,7 @@ jobs:
     condition: and(succeeded(), or(variables['Endjin.ForcePublish'], eq(variables['GitVersion.PreReleaseTag'], '')))
     inputs:
       gitHubConnection: endjin-github
-      repositoryName: $(Endjin_Repository_Name)
+      repositoryName: endjin
       tagSource: manual
       tag: $(GitVersion.SemVer) 
       isPreRelease: $(Endjin_IsPreRelease)
