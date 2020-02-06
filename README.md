@@ -17,7 +17,7 @@ When you add a reference to this package via NuGet, it does the following:
 
 ## CI / CD
 
-The project is [hosted on Azure DevOps](https://dev.azure.com/endjin-labs/dotnet-adr) under the `endjin-labs` org.
+The project is [hosted on Azure DevOps](https://dev.azure.com/endjin-labs/Endjin.RecommendedPractices.NuGet) under the `endjin-labs` org.
 
 ## Packages
 
