@@ -10,7 +10,7 @@
       PackageIconUrl has been deprecated by NuGet, so we need to use <PackageIcon>.
 
       The Endjin.RecommendedPractices NuGet package presumes that the icon lives in
-      the solution directory, and is called PackageIcon.png. You can disable this
+      the parent directory, and is called PackageIcon.png. You can disable this
       presumption by setting this property:
 
       <EndjinDisableDefaultPackageIconInclusion>true</EndjinDisableDefaultPackageIconInclusion>
@@ -48,7 +48,17 @@
   </PropertyGroup>
 
   <ItemGroup Condition="$(EndjinDisableDefaultPackageIconInclusion) != 'true'">
-      <None Include="$(SolutionDir)PackageIcon.png" Pack="true" PackagePath="\"/>
+    <!--
+      We can't use $(SolutionDir) because that's set to the normal solution folder in "dotnet pack"
+      builds, because the Azure DevOps dotnet task runs "dotnet pack" once for each csproj instead
+      of for the whole solution. So we just have to presume it's in the parent folder. In cases
+      where that's not true, prjects can set
+
+      <EndjinDisableDefaultPackageIconInclusion>true</EndjinDisableDefaultPackageIconInclusion>
+
+      and add the package icon themselves.
+    -->
+    <None Include="../PackageIcon.png" Pack="true" PackagePath="\"/>
   </ItemGroup>
 
 </Project>
