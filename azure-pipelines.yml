@@ -12,7 +12,7 @@ resources:
     - repository: recommended_practices
       type: github
       name: endjin/Endjin.RecommendedPractices.AzureDevopsPipelines.GitHub
-      endpoint: menes-dotnet-github
+      endpoint: endjin
 
  
 jobs:
