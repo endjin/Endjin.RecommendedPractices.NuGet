@@ -62,13 +62,12 @@ jobs:
       assets: |
           $(Build.ArtifactStagingDirectory)/**
 
-# This will have to wait until Howard can set up a service connection to NuGet.org
-#  - task: NuGetCommand@2
-#    displayName: 'Publish to nuget.org'
-#    condition: and(succeeded(), or(variables['Endjin.ForcePublish'], eq(variables['GitVersion.PreReleaseTag'], '')))
-#    inputs:
-#      command: push
-#      nuGetFeedType: external
-#      publishFeedCredentials: ${{ parameters.service_connection_nuget_org }}
-#      versioningScheme: byBuildNumber
-#      packagesToPush: '$(Build.ArtifactStagingDirectory)/Packages/**/*.nupkg'
+  - task: NuGetCommand@2
+    displayName: 'Publish to nuget.org'
+    condition: and(succeeded(), or(variables['Endjin.ForcePublish'], eq(variables['GitVersion.PreReleaseTag'], '')))
+    inputs:
+      command: push
+      nuGetFeedType: external
+      publishFeedCredentials: endjin-nuget-org
+      versioningScheme: byBuildNumber
+      packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
