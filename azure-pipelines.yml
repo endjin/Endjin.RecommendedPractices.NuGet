@@ -25,6 +25,7 @@ jobs:
 #    service_connection_github: $(Endjin_Service_Connection_GitHub)
 
   steps:
+  - template: install.dotnet-global-tools.workaround.yml
   - template: templates/install-and-run-gitversion.yml@recommended_practices
   - task: NuGetToolInstaller@1
     inputs:
