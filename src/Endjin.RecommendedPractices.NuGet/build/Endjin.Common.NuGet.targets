@@ -2,6 +2,7 @@
 
   <Target Name="_EndjinSetPackageProjectAndReleaseDetails" DependsOnTargets="InitializeSourceControlInformation" BeforeTargets="GenerateNuspec">
     <PropertyGroup>
+      <RepositoryUrl Condition="$(RepositoryUrl) == ''">$(PrivateRepositoryUrl)</RepositoryUrl>
       <PackageProjectUrl Condition="$(PackageProjectUrl) == ''">$(RepositoryUrl)</PackageProjectUrl>
       <PackageReleaseNotes Condition="$(PackageReleaseNotes) == ''">See $(RepositoryUrl)/releases/</PackageReleaseNotes>
     </PropertyGroup>
