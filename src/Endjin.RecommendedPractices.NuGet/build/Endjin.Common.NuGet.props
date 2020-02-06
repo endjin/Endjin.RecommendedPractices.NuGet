@@ -2,7 +2,6 @@
   <PropertyGroup>
     <Authors>Endjin Limited</Authors>
     <!-- Note: Copyright property is not specific to NuGet so we set it elsewhere -->
-    <PackageProjectUrl></PackageProjectUrl>
     <!-- <RepositoryUrl>https://github.com/$(GitHubOrg)/$(GitHubProject).git</RepositoryUrl> -->
     <RepositoryType>git</RepositoryType>
 
@@ -21,7 +20,6 @@
       other means.
     -->
     <PackageIcon>PackageIcon.png</PackageIcon>
-    <PackageReleaseNotes>See https://github.com/$(GitHubOrg)/$(GitHubProject)/releases/</PackageReleaseNotes>
 
     <!--
       We require license acceptance, but since we use different licenses in different scenarios,
