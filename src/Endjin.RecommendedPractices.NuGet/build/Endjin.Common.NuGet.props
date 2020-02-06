@@ -1,0 +1,54 @@
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Authors>Endjin Limited</Authors>
+    <!-- Note: Copyright property is not specific to NuGet so we set it elsewhere -->
+    <PackageProjectUrl></PackageProjectUrl>
+    <RepositoryUrl>https://github.com/$(GitHubOrg)/$(GitHubProject).git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <!--
+      PackageIconUrl has been deprecated by NuGet, so we need to use <PackageIcon>.
+
+      The Endjin.RecommendedPractices NuGet package presumes that the icon lives in
+      the solution directory, and is called PackageIcon.png. You can disable this
+      presumption by setting this property:
+
+      <EndjinDisableDefaultPackageIconInclusion>true</EndjinDisableDefaultPackageIconInclusion>
+
+      (See the <ItemGroup> later in this file.)
+
+      If you do this, you must ensure that a PackageIcon.png is added to the packaged output by
+      other means.
+    -->
+    <PackageIcon>PackageIcon.png</PackageIcon>
+    <PackageReleaseNotes>See https://github.com/$(GitHubOrg)/$(GitHubProject)/releases/</PackageReleaseNotes>
+
+    <!--
+      We require license acceptance, but since we use different licenses in different scenarios,
+      the Endjin.RecommendedPractices NuGet package does not specify a license. The result is that
+      when you try to produce a package, you will get a build error complaining that a license must
+      be set if PackageRequireLicenseAcceptance is true.
+
+      Projects using the Endjin.RecommendedPractices NuGet package must therefore set the
+      license, in their .csproj e.g.:
+
+      <PropertyGroup>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+      </PropertyGroup>
+
+      Projects that will not produce a NuGet package do not need to do this. (There should of
+      course still be a license at the top of the repo. It's just that there's no project-specific
+      technical requirement to specify the license in projects that don't produce packages.)
+    -->
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <ItemGroup Condition="$(EndjinDisableDefaultPackageIconInclusion) != 'true'">
+      <None Include="$(SolutionDir)PackageIcon.png" Pack="true" PackagePath="\"/>
+  </ItemGroup>
+
+</Project>

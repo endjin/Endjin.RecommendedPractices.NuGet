@@ -193,8 +193,11 @@ PublishScripts/
 # Uncomment if necessary however generally it will be regenerated when needed
 #!**/[Pp]ackages/repositories.config
 # NuGet v3's project.json files produces more ignorable files
+# However, we want to keep these files when they're in the build folder of a NuGet package
 *.nuget.props
+!**/build/*.nuget.props
 *.nuget.targets
+!**/build/*.nuget.targets
 
 # Microsoft Azure Build Output
 csx/
