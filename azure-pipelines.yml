@@ -26,3 +26,12 @@ jobs:
 
   steps:
   - template: templates/install-and-run-gitversion.yml@recommended_practices
+- task: NuGetToolInstaller@1
+  inputs:
+    versionSpec: '5.4.0'
+
+- task: NuGetCommand@2
+  inputs:
+    command: 'pack'
+    packagesToPack: 'src/Endjin.RecommendedPractices.NuGet/Endjin.RecommendedPractices.nuspec'
+    versioningScheme: 'byBuildNumber'
