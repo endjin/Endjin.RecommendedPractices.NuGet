@@ -2,7 +2,10 @@
   <PropertyGroup>
     <Authors>Endjin Limited</Authors>
     <!-- Note: Copyright property is not specific to NuGet so we set it elsewhere -->
-    <!-- <RepositoryUrl>https://github.com/$(GitHubOrg)/$(GitHubProject).git</RepositoryUrl> -->
+    <RepositoryUrl>https://github.com/$(GitHubOrg)/$(GitHubProject)</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/$(GitHubOrg)/$(GitHubProject)</PackageProjectUrl>
+    <PackageReleaseNotes>See https://github.com/$(GitHubOrg)/$(GitHubProject)/releases/</PackageReleaseNotes>
+
     <RepositoryType>git</RepositoryType>
 
     <!--
@@ -39,8 +42,9 @@
       technical requirement to specify the license in projects that don't produce packages.)
     -->
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <!-- <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <EmbedUntrackedSources>true</EmbedUntrackedSources> -->
+
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
