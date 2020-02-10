@@ -8,9 +8,15 @@
         <version>0.1.0</version>
         <description>Applies endjin standard practices to a .NET project.</description>
         <authors>endjin</authors>
+
+        <developmentDependency>true</developmentDependency>
+        <dependencies>
+            <dependency id="Microsoft.SourceLink.GitHub" version="1.0.0" />
+        </dependencies>
     </metadata>
 
     <files>
         <file src="build\**" target="build" />
     </files>
+
 </package>
