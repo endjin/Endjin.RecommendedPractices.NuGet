@@ -12,7 +12,7 @@ resources:
     - repository: recommended_practices
       type: github
       name: endjin/Endjin.RecommendedPractices.AzureDevopsPipelines.GitHub
-      endpoint: $(Endjin_Service_Connection_GitHub)
+      endpoint: ${{ variables.Endjin_Service_Connection_GitHub }}
 
  
 jobs:
@@ -50,7 +50,7 @@ jobs:
     displayName: 'Create GitHub Release'      
     condition: and(succeeded(), or(variables['Endjin.ForcePublish'], eq(variables['GitVersion.PreReleaseTag'], '')))
     inputs:
-      gitHubConnection: $(Endjin_Service_Connection_GitHub)
+      gitHubConnection: ${{ variables.Endjin_Service_Connection_GitHub }}
       repositoryName: endjin/Endjin.RecommendedPractices.NuGet
       tagSource: manual
       tag: $(GitVersion.SemVer) 
@@ -64,6 +64,6 @@ jobs:
     inputs:
       command: push
       nuGetFeedType: external
-      publishFeedCredentials: $(Endjin_Service_Connection_NuGet_Org)
+      publishFeedCredentials: ${{ variables.Endjin_Service_Connection_NuGet_Org }}
       versioningScheme: byBuildNumber
       packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
