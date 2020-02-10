@@ -6,10 +6,10 @@ resources:
     - repository: recommended_practices
       type: github
       name: endjin/Endjin.RecommendedPractices.AzureDevopsPipelines.GitHub
-      endpoint: menes-dotnet-github
+      endpoint: endjin-github-patfix
 
 jobs:
 - template: templates/tag.for.release.yml@recommended_practices
   parameters:
     vmImage: 'windows-latest'
-    service_connection_github: $(Endjin_Service_Connection_GitHub)
+    service_connection_github: endjin-github-patfix
