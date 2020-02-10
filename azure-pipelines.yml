@@ -50,7 +50,7 @@ jobs:
     displayName: 'Create GitHub Release'      
     condition: and(succeeded(), or(variables['Endjin.ForcePublish'], eq(variables['GitVersion.PreReleaseTag'], '')))
     inputs:
-      gitHubConnection: ${{ variables.Endjin_Service_Connection_GitHub }}
+      gitHubConnection: $(Endjin_Service_Connection_GitHub)
       repositoryName: endjin/Endjin.RecommendedPractices.NuGet
       tagSource: manual
       tag: $(GitVersion.SemVer) 
@@ -64,6 +64,6 @@ jobs:
     inputs:
       command: push
       nuGetFeedType: external
-      publishFeedCredentials: ${{ variables.Endjin_Service_Connection_NuGet_Org }}
+      publishFeedCredentials: $(Endjin_Service_Connection_NuGet_Org)
       versioningScheme: byBuildNumber
       packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
