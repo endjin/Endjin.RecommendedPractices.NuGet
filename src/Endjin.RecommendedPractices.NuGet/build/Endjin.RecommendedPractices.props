@@ -35,4 +35,7 @@
   <Import Project="$(MSBuildThisFileDirectory)Endjin.Common.NuGet.props" />
   <Import Project="$(MSBuildThisFileDirectory)Endjin.Common.Net.props" />
 
+  <PropertyGroup>
+    <EndjinProjectPropsPath>$(MSBuildThisFileDirectory)Endjin.Project.props</EndjinProjectPropsPath>
+  </PropertyGroup>
 </Project>

@@ -1,0 +1,13 @@
+<!--
+    endjin's standard folder layout has the entire namespace represented. The is because it is
+    common for projects that provide dependency injection extension methods to add those to
+    the Microsoft.Extensions.DependencyInjection namespace, in which case there is no single
+    common shared root namespace.
+-->
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <PropertyGroup>
+        <RootNamespace />
+    </PropertyGroup>
+
+</Project>

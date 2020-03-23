@@ -39,13 +39,6 @@
     -->
     <LangVersion>latest</LangVersion>
 
-    <!--
-        endjin's standard folder layout has the entire namespace represented. The is because it is
-        common for projects that provide dependency injection extension methods to add those to
-        the Microsoft.Extensions.DependencyInjection namespace, in which case there is no single
-        common shared root namespace.
-    -->
-    <RootNamespace />
 
     <!--
         If you don't specify a location for the XML documentation, it doesn't appear.
