@@ -28,7 +28,7 @@ What if `Endjin.RecommendedPractices` could enjoy all these same benefits as `En
 
 ## Decision
 
-Move our standard build files into a NuGet package. Define extensibility mechanisms as required.
+Move our standard build files into a NuGet package: [Endjin.RecommendedPractices.NuGet](https://www.nuget.org/packages/Endjin.RecommendedPractices.NuGet). Define extensibility mechanisms as required.
 
 ## Consequences
 
