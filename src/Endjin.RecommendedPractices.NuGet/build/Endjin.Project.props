@@ -1,0 +1,16 @@
+<!--
+    This must be imported by projects using Endjin.RecommendedPractices at the top of the
+    project file. We use this to be able to set properties at the right time - certain
+    properties (notably RootNamespace) are sensitive to this, and setting them via the
+    normal NuGet mechanism fails because it runs too early and gets overridden later.
+-->
+
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Project="$(MSBuildThisFileDirectory)Endjin.EmptyRootNamespace.props" />
+
+  <PropertyGroup>
+    <_EndjinProjectPropsImported>true</_EndjinProjectPropsImported>
+  </PropertyGroup>
+
+</Project>

@@ -5,7 +5,7 @@
         <id>Endjin.RecommendedPractices</id>
 
         <!-- This is overridden by the automatic build. It is present here to avoid validation failures. -->
-        <version>0.1.0</version>
+        <version>0.2.0</version>
         <description>Applies endjin standard practices to a .NET project.</description>
         <authors>endjin</authors>
 

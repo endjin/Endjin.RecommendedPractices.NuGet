@@ -1,0 +1,18 @@
+<!--
+    Certain project properties (notably RootNamespace) are sensitive to exactly when you choose to set
+    them, with the effect that we need at least one of our .props files to be evaluated at the top
+    of the csproj. There's no way to do that today with the NuGet build artifacts mechanism, so
+    we have to required projects to import one of our files explicitly.
+
+    This file's purpose is to check that they've done that, and to tell them how to modify their
+    csproj if they've not done it yet.
+-->
+
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="_EndjinCheckImport">
+    <Target Name="_EndjinCheckImport">
+        <Error
+            Condition=" ('$(_EndjinProjectPropsImported)' != 'true') And ($(EndjinSuppressPropsImportError) != 'true') "
+            Text="When using the Endjin.RecommendedPractices NuGet package, you must add &lt;Import Project=&quot;%24(EndjinProjectPropsPath)&quot; /&gt; at the top of your csproj file"
+        />
+    </Target>
+</Project>
