@@ -20,9 +20,9 @@ However, our `Endjin.RecommendedPractices.AzureDevopsPipelines.GitHub` works a l
 
 Because projects don't copy and then modify the relevant files—instead they just refer to them and then plug into the extensibility points supplied—it is absolutely clear when something is a project-specific tweak. And this also provides a straightforward mechanism for updates: when something breaks the build (e.g., as happened when .NET Core SDK 3.1.200 came out) we can push a single update to fix everything.
 
-What it `Endjin.RecommendedPractices` could enjoy all these same benefits as `Endjin.RecommendedPractices.AzureDevopsPipelines.GitHub`? The key characteristics are:
+What if `Endjin.RecommendedPractices` could enjoy all these same benefits as `Endjin.RecommendedPractices.AzureDevopsPipelines.GitHub`? The key characteristics are:
 
-- one definitive copy of the relevant files, distributed through a mechanism designed to enable sharing of such file
+- one definitive copy of the relevant files, distributed through a mechanism designed to enable sharing of such files
 - clearly-defined extensibility points to provide individual projects with the flexibility they require, without needing them to have their own copies of everything
 
 
@@ -36,7 +36,8 @@ This solves the problems above:
 
 - this repo, which builds the package, defines the single source, and our listing on the NuGet store provides the mechanism by which it gets distributed to projects that need it
 - by using clearly-defined extensibility points, it becomes clear what's a project-specific feature, and what's not
-- NuGet defines a mechanism for pushing out updates, and dependabot provides us with a way to discover that updates are available
+- NuGet defines a mechanism for pushing out updates
+- dependabot provides us with a way to discover that updates are available
 - it is entirely possible to build multi-target NuGet packages
 - this is an opportunity to rationalise the design
 
@@ -48,6 +49,6 @@ It has some additional benefits:
 
 It also has some downsides:
 
-- problems in the build are harder to diagnose because things are less transparent
+- problems in the build can be harder to diagnose because things are less transparent
 - if a project needs an extensibility point that doesn't yet exist, there's greater friction as we need to produce a new version of this NuGet package
 - there are some constraints around where exactly a NuGet package can inject itself into the build process (e.g., it appears it can't do anything that runs at the exact same moment that `Directory.props` would have run)
