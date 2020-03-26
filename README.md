@@ -9,7 +9,7 @@ When you add a reference to this package via NuGet, it does the following:
 * provides default settings for NuGet package metadata
 * enables sourcelink on projects that are building NuGet packages
 * makes warnings errors
-* disables the more vexing Roslynator and Stylecop warnings
+* disables the more vexing Roslynator and StyleCop warnings
 * provides default stylecop.json, StyleCop.ruleset, and .editorconfig files at the solution level if you don't yet have theses
 * detects whether you're building for a NuGet package or a non-packaged target, and adjusts the warning set slightly accordingly (unless you ask it not to)
 * ensures that if you have a local.setting.json it's configured to be copied to the output folder if it changes
