@@ -12,7 +12,7 @@
     <Target Name="_EndjinCheckImport">
         <Error
             Condition=" ('$(_EndjinProjectPropsImported)' != 'true') And ($(EndjinSuppressPropsImportError) != 'true') "
-            Text="When using the Endjin.RecommendedPractices NuGet package, you must add &lt;Import Project=&quot;%24(EndjinProjectPropsPath)&quot; /&gt; at the top of your csproj file"
+            Text="When using the Endjin.RecommendedPractices NuGet package, you must add &lt;Import Project=&quot;%24(EndjinProjectPropsPath)&quot; Condition=&quot;%24(EndjinProjectPropsPath) != ''&quot; /&gt; at the top of your csproj file"
         />
     </Target>
 </Project>
