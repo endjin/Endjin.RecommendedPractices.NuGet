@@ -4,7 +4,22 @@
 
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
- <PropertyGroup>
+  <!--
+    We presume that a solution exists. Two of the important jobs we do are creating a
+    default StyleCop configuration file if none exists, and creating a default .editorconfig
+    if none exists. These are both solution-level items.
+    Building in Visual Studio this isn't a problem because that always builds the solution.
+    However, with the .NET CLI it's often not the case. And it seems that developing in
+    VS code also throws up issues, possibly because it's using the CLI too, or working in
+    a way similar to how the CLI does.
+    So we need to detect when the build system hasn't provided the solution directory and
+    set the property ourselves.
+  -->
+  <PropertyGroup Condition="$(SolutionDir) == ''">
+    <SolutionDir>$([System.IO.Path]::GetDirectoryName($(MSBuildProjectDirectory)))\</SolutionDir>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <!--
       The SDK's targets files will include the processor architecture in the output folder path
       (e.g., bin\Release\x64) for anything other than the AnyCPU architecture.
@@ -31,7 +46,7 @@
       to refer the $(OutputPath).
     -->
     <OutputPath>bin\$(Configuration)\</OutputPath>
- </PropertyGroup>
+  </PropertyGroup>
 
   <PropertyGroup>
     <!--

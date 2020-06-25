@@ -18,8 +18,8 @@
         which will also prevent the addition of the reference to StyleCop.Analyzers.
     -->
     <Target Name="_EndjinEnsureCodeAnalysisRuleSet" AfterTargets="BeforeBuild" BeforeTargets="CoreBuild">
-        <Copy Condition="($(EndjinDisableCodeAnalysis) != 'true') and (!Exists('$(CodeAnalysisRuleSet)'))" SourceFiles="$(MSBuildThisFileDirectory)/StyleCop.ruleset" DestinationFiles="$(CodeAnalysisRuleSet)" />
-        <Copy Condition="($(EndjinDisableCodeAnalysis) != 'true') and (!Exists('$(SolutionDir)stylecop.json'))" SourceFiles="$(MSBuildThisFileDirectory)/stylecop.json" DestinationFiles="$(SolutionDir)stylecop.json" />
+        <Copy Condition="($(EndjinDisableCodeAnalysis) != 'true') and (!Exists('$(CodeAnalysisRuleSet)'))" SourceFiles="$(MSBuildThisFileDirectory)StyleCop.ruleset" DestinationFiles="$(CodeAnalysisRuleSet)" />
+        <Copy Condition="($(EndjinDisableCodeAnalysis) != 'true') and (!Exists('$(SolutionDir)stylecop.json'))" SourceFiles="$(MSBuildThisFileDirectory)stylecop.json" DestinationFiles="$(SolutionDir)stylecop.json" />
     </Target>
 
     <Target Name="_EndjinEnsureEditorConfig" AfterTargets="BeforeBuild" BeforeTargets="CoreBuild">
