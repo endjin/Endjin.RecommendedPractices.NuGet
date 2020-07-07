@@ -26,6 +26,14 @@
         <Copy Condition="($(EndjinDisableCreateEditorConfig) != 'true') and (!Exists('$(SolutionDir).editorconfig'))" SourceFiles="$(MSBuildThisFileDirectory)/.editorconfig" DestinationFiles="$(SolutionDir).editorconfig" />
     </Target>
 
+    <!--
+        If the solution doesn't already have a package icon, we supply a default one so that
+        developers don't see a big red cross against a non-existent file as their first experience
+        after adding this package.
+    -->
+    <Target Name="_EndjinEnsureSolutionLevelPackageIcon" AfterTargets="BeforeBuild" BeforeTargets="CoreBuild">
+        <Copy Condition="($(IsPackable) != 'false') and ($(EndjinDisableDefaultPackageIconInclusion) != 'true') and (!Exists('$(SolutionDir)PackageIcon.png'))" SourceFiles="$(MSBuildThisFileDirectory)/DefaultPackageIcon.png" DestinationFiles="$(SolutionDir)PackageIcon.png" />
+    </Target>
 
     <!--
         Non-packable projects will not be distributed through NuGet and so in general we don't
