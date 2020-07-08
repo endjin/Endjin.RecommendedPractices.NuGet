@@ -9,22 +9,6 @@
     <RepositoryType>git</RepositoryType>
 
     <!--
-      PackageIconUrl has been deprecated by NuGet, so we need to use <PackageIcon>.
-
-      The Endjin.RecommendedPractices NuGet package presumes that the icon lives in
-      the parent directory, and is called PackageIcon.png. You can disable this
-      presumption by setting this property:
-
-      <EndjinDisableDefaultPackageIconInclusion>true</EndjinDisableDefaultPackageIconInclusion>
-
-      (See the <ItemGroup> later in this file.)
-
-      If you do this, you must ensure that a PackageIcon.png is added to the packaged output by
-      other means.
-    -->
-    <PackageIcon>PackageIcon.png</PackageIcon>
-
-    <!--
       We require license acceptance, but since we use different licenses in different scenarios,
       the Endjin.RecommendedPractices NuGet package does not specify a license. The result is that
       when you try to produce a package, you will get a build error complaining that a license must
@@ -49,7 +33,44 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
-  <ItemGroup Condition="$(EndjinDisableDefaultPackageIconInclusion) != 'true'">
+    <!--
+      PackageIconUrl has been deprecated by NuGet, so we need to use <PackageIcon>.
+
+      The Endjin.RecommendedPractices NuGet package presumes that the icon lives in
+      the parent directory, and is called PackageIcon.png. You can disable this
+      presumption by setting this property:
+
+      <EndjinDisableDefaultPackageIconInclusion>true</EndjinDisableDefaultPackageIconInclusion>
+
+      If you do this, you must ensure that a PackageIcon.png is added to the packaged output by
+      other means.
+
+      As long as you haven't disabled this behaviour with the property shown above (or
+      by setting <IsPackable>false</IsPackable> because you're not building a package)
+      we check for the existence of PackageIcon.png in the solution folder, and if it doesn't
+      exist, we copy a default icon into place. (This is done by Endjin.Common.Net.targets.)
+
+      The following PropertyGroup and ItemGroup arrange to use that solution-level package
+      icon. These are conditional on the existence of the file, because otherwise we get
+      some baffling first-use behaviour: the package icon file will appear in Solution
+      Explorer but with a red X by it, because the file doesn't exist yet. We don't get
+      an opportunity to copy the default icon file into place until the first time a
+      build runs. And unfortunately that error icon doesn't go away even after the file gets
+      created - you have to unload and reload the solution after building it, which is
+      non-obvious and annoying. So instead, if the file's not there yet, we don't
+      attempt to use it. This means that the PackageIcon.png file won't show up in
+      Solution Explorer to start with - it requires a build-unload-reload to make it
+      appear. (The first build creates it, then unloading and reloading the
+      solution is necessary for Solution Explorer to notice the change.) But this way
+      it's less obtrusive - instead of getting a big red X, you just don't see the
+      PackageIcon.png to begin with.
+    -->
+
+  <PropertyGroup Condition="($(IsPackable) != 'false') and ($(EndjinDisableDefaultPackageIconInclusion) != 'true') and (Exists('$(SolutionDir)PackageIcon.png'))">
+    <PackageIcon>PackageIcon.png</PackageIcon>
+  </PropertyGroup>
+
+  <ItemGroup Condition="($(IsPackable) != 'false') and ($(EndjinDisableDefaultPackageIconInclusion) != 'true') and (Exists('$(SolutionDir)PackageIcon.png'))">
     <!--
       We can't use $(SolutionDir) because that's set to the normal solution folder in "dotnet pack"
       builds, because the Azure DevOps dotnet task runs "dotnet pack" once for each csproj instead
