@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Authors>Endjin Limited</Authors>
     <!-- Note: Copyright property is not specific to NuGet so we set it elsewhere -->
-    <RepositoryUrl>https://github.com/$(GitHubOrg)/$(GitHubProject)</RepositoryUrl>
+    <RepositoryUrl>https://github.com/$(GitHubOrg)/$(GitHubProject).git</RepositoryUrl>
     <PackageProjectUrl>https://github.com/$(GitHubOrg)/$(GitHubProject)</PackageProjectUrl>
     <PackageReleaseNotes>See https://github.com/$(GitHubOrg)/$(GitHubProject)/releases/</PackageReleaseNotes>
 
@@ -31,6 +31,9 @@
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <Deterministic>true</Deterministic>
+    <!-- https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml#system-variables -->
+    <ContinuousIntegrationBuild Condition="'$(TF_BUILD)' == 'true'">True</ContinuousIntegrationBuild>
   </PropertyGroup>
 
     <!--
