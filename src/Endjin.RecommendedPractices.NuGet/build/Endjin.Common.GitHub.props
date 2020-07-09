@@ -3,7 +3,6 @@
   <PropertyGroup>
     <GitHubOrg>$([System.Text.RegularExpressions.Regex]::Match($(EndjinRepositoryUrl), `https://github.com/([^/]*)/([^/]*)`).Groups[1].Value)</GitHubOrg>
     <GitHubProject>$([System.Text.RegularExpressions.Regex]::Match($(EndjinRepositoryUrl), `https://github.com/([^/]*)/([^/]*)`).Groups[2].Value)</GitHubProject>
-    <GitHubCommit>$(EndjinCommitSha)</GitHubCommit>
   </PropertyGroup>
 
 </Project>

@@ -2,8 +2,7 @@
   <PropertyGroup>
     <Authors>Endjin Limited</Authors>
     <!-- Note: Copyright property is not specific to NuGet so we set it elsewhere -->
-    <RepositoryUrl>https://github.com/$(GitHubOrg)/$(GitHubProject)</RepositoryUrl>
-    <RepositoryCommit>$(GitHubCommit)</RepositoryCommit>
+    <RepositoryUrl>https://github.com/$(GitHubOrg)/$(GitHubProject).git</RepositoryUrl>
     <PackageProjectUrl>https://github.com/$(GitHubOrg)/$(GitHubProject)</PackageProjectUrl>
     <PackageReleaseNotes>See https://github.com/$(GitHubOrg)/$(GitHubProject)/releases/</PackageReleaseNotes>
 
