@@ -34,6 +34,9 @@ jobs:
     inputs:
       versionSpec: '5.4.0'
 
+  - bash: |
+      echo 'alias nuget="mono /opt/hostedtoolcache/NuGet/5.4.0/x64/nuget.exe"' >>~/.bash_profile
+
   - task: PowerShell@2
     inputs:
       targetType: 'filePath'
