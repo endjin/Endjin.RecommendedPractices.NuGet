@@ -37,7 +37,7 @@ jobs:
   - task: PowerShell@2
     inputs:
       targetType: 'filePath'
-      filePath: .\src\Endjin.RecommendedPractices.Nuget.Specs\run-tests.ps1
+      filePath: src\Endjin.RecommendedPractices.Nuget.Specs\run-tests.ps1
       pwsh: true
     displayName: Run tests
 
