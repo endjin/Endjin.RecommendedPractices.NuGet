@@ -3,7 +3,7 @@ $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 Write-Host "Here: $here"
 
-$recommendedPracticesDir = Resolve-Path (Join-Path $here "../Endjin.RecommendedPractices.Nuget")
+$recommendedPracticesDir = Resolve-Path (Join-Path $here "../Endjin.RecommendedPractices.NuGet")
 $recommendPracticesNuspec = Resolve-Path (Join-Path $recommendedPracticesDir "Endjin.RecommendedPractices.nuspec")
 $specsSlnDir = Resolve-Path (Join-Path $here "Solution")
 $specsSln = Resolve-Path (Join-Path $specsSlnDir "Endjin.RecommendedPractices.Nuget.Specs.sln")
