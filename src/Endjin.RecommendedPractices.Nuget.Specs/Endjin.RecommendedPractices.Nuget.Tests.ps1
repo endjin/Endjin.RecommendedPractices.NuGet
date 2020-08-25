@@ -7,7 +7,7 @@ $recommendedPracticesDir = Resolve-Path (Join-Path $here "../Endjin.RecommendedP
 $recommendPracticesNuspec = Resolve-Path (Join-Path $recommendedPracticesDir "Endjin.RecommendedPractices.nuspec")
 $specsSlnDir = Resolve-Path (Join-Path $here "Solution")
 $specsSln = Resolve-Path (Join-Path $specsSlnDir "Endjin.RecommendedPractices.Nuget.Specs.sln")
-$packageOutputDir = Resolve-Path (Join-Path $here "../packages")
+$packageOutputDir = (New-Item -ItemType Directory -Force -Path (Join-Path $here "../packages")).FullName
 
 Write-Host "Recommended Practices directory: $recommendedPracticesDir"
 Write-Host "Recommended Practices nuspec: $recommendPracticesNuspec"
