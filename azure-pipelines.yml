@@ -35,6 +35,7 @@ jobs:
       versionSpec: '5.4.0'
 
   - pwsh: |
+      New-Item $profile -ItemType File -Force
       'Set-Alias nuget "mono /opt/hostedtoolcache/NuGet/5.4.0/x64/nuget.exe"' > $profile
 
   - task: PowerShell@2
