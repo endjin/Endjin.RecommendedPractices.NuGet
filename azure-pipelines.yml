@@ -34,8 +34,8 @@ jobs:
     inputs:
       versionSpec: '5.4.0'
 
-  - bash: |
-      echo 'alias nuget="mono /opt/hostedtoolcache/NuGet/5.4.0/x64/nuget.exe"' >>~/.bash_profile
+  - pwsh: |
+      'Set-Alias nuget "mono /opt/hostedtoolcache/NuGet/5.4.0/x64/nuget.exe"' > $profile
 
   - task: PowerShell@2
     inputs:
