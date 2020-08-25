@@ -11,6 +11,7 @@ try {
 
     if ($results.FailedCount -gt 0) {
         Write-Host ("{0} out of {1} tests failed - check previous logging for more details" -f $results.FailedCount, $results.TotalCount)
+        exit 1
     }
 
     $results
