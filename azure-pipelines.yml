@@ -17,8 +17,10 @@ resources:
  
 jobs:
 - job: Build
+  variables:
+    NuGetToolVersion: '5.4.0'
   pool:
-    vmImage: 'ubuntu-latest'
+    vmImage: 'windows-latest'
 
   steps:
   # GitVersion doesn't work on build agenst without the global tools workaround step
@@ -32,7 +34,14 @@ jobs:
 
   - task: NuGetToolInstaller@1
     inputs:
-      versionSpec: '5.4.0'
+      versionSpec: '$(NuGetToolVersion)'
+
+  - task: PowerShell@2
+    inputs:
+      targetType: 'filePath'
+      filePath: 'src/Endjin.RecommendedPractices.Nuget.Specs/run-tests.ps1'
+      pwsh: true
+    displayName: Run tests
 
   - task: NuGetCommand@2
     inputs:
