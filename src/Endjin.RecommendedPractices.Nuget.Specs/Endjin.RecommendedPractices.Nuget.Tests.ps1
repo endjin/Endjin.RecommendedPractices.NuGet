@@ -43,9 +43,9 @@ Describe 'Packaging tests' {
     Invoke-NuGet sources Add @("-Name", 'EndjinRecommendedPracticesLocal', "-Source", $packageOutputDir)
     Invoke-NuGet pack $recommendPracticesNuspec @("-Version", '0.0.1-local', "-OutputDirectory", $packageOutputDir, "-NoDefaultExcludes")
 
-    dotnet build $specsSln /p:Configuration=Release
-    dotnet pack (Join-Path $specsSlnDir "SingleFramework/SingleFramework.csproj") --no-build --output $packageOutputDir /p:Configuration=Release /p:EndjinRepositoryUrl="https://github.com/endjin/Endjin.RecommendedPractices" /p:PackageVersion=0.0.1-local
-    dotnet pack (Join-Path $specsSlnDir "MultiFramework/MultiFramework.csproj") --no-build --output $packageOutputDir /p:Configuration=Release /p:EndjinRepositoryUrl="https://github.com/endjin/Endjin.RecommendedPractices" /p:PackageVersion=0.0.1-local
+    (dotnet build $specsSln /p:Configuration=Release) | Write-Host
+    (dotnet pack (Join-Path $specsSlnDir "SingleFramework/SingleFramework.csproj") --no-build --output $packageOutputDir /p:Configuration=Release /p:EndjinRepositoryUrl="https://github.com/endjin/Endjin.RecommendedPractices" /p:PackageVersion=0.0.1-local) | Write-Host
+    (dotnet pack (Join-Path $specsSlnDir "MultiFramework/MultiFramework.csproj") --no-build --output $packageOutputDir /p:Configuration=Release /p:EndjinRepositoryUrl="https://github.com/endjin/Endjin.RecommendedPractices" /p:PackageVersion=0.0.1-local) | Write-Host
 
     Invoke-NuGet sources Remove @("-Name", 'EndjinRecommendedPracticesLocal')
 
