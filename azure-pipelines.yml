@@ -34,9 +34,8 @@ jobs:
     inputs:
       versionSpec: '5.4.0'
 
-  - pwsh: |
-      New-Item $profile -ItemType File -Force
-      'Set-Alias nuget "mono /opt/hostedtoolcache/NuGet/5.4.0/x64/nuget.exe"' > $profile
+  - script: echo '##vso[task.setvariable variable=NuGetAlias]mono /opt/hostedtoolcache/NuGet/5.4.0/x64/nuget.exe'
+    displayName: Set NuGetAlias variable
 
   - task: PowerShell@2
     inputs:

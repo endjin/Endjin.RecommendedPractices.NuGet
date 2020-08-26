@@ -20,6 +20,10 @@ Remove-Item $packageOutputDir -Force -Recurse -ErrorAction SilentlyContinue
 @(".editorconfig","PackageIcon.png","stylecop.json","StyleCop.ruleset") | ForEach-Object { Join-Path $specsSlnDir $_ } | Remove-Item -Force -ErrorAction SilentlyContinue
 Remove-Item "$env:userprofile\.nuget\packages\endjin.recommendedpractices\0.0.1-local" -Force -Recurse -ErrorAction SilentlyContinue
 
+if ($env:NuGetAlias) {
+    Set-Alias -Name nuget -Value $env:NuGetAlias
+}
+
 Describe 'Packaging tests' {
 
     nuget sources Add -Name "EndjinRecommendedPracticesLocal" -Source $packageOutputDir
