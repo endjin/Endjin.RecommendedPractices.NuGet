@@ -20,15 +20,29 @@ Remove-Item $packageOutputDir -Force -Recurse -ErrorAction SilentlyContinue
 @(".editorconfig","PackageIcon.png","stylecop.json","StyleCop.ruleset") | ForEach-Object { Join-Path $specsSlnDir $_ } | Remove-Item -Force -ErrorAction SilentlyContinue
 Remove-Item "$env:userprofile\.nuget\packages\endjin.recommendedpractices\0.0.1-local" -Force -Recurse -ErrorAction SilentlyContinue
 
+
 Describe 'Packaging tests' {
 
-    . nuget sources Add -Name "EndjinRecommendedPracticesLocal" -Source $packageOutputDir
-
-    . nuget pack $recommendPracticesNuspec -Version "0.0.1-local" -OutputDirectory $packageOutputDir -NoDefaultExcludes
+    If ($IsWindows) {
+        &nuget sources Add -Name "EndjinRecommendedPracticesLocal" -Source $packageOutputDir
+        &nuget pack $recommendPracticesNuspec -Version "0.0.1-local" -OutputDirectory $packageOutputDir -NoDefaultExcludes
+    }
+    Else {
+        $pathToNuGet = Get-Command nuget.exe | Select-Object -ExpandProperty Source
+        &mono $pathToNuGet sources Add -Name "EndjinRecommendedPracticesLocal" -Source $packageOutputDir
+        &mono $pathToNuGet pack $recommendPracticesNuspec -Version "0.0.1-local" -OutputDirectory $packageOutputDir -NoDefaultExcludes
+    }
 
     dotnet build $specsSln /p:Configuration=Release
     dotnet pack (Join-Path $specsSlnDir "SingleFramework/SingleFramework.csproj") --no-build --output $packageOutputDir /p:Configuration=Release /p:EndjinRepositoryUrl="https://github.com/endjin/Endjin.RecommendedPractices" /p:PackageVersion=0.0.1-local
     dotnet pack (Join-Path $specsSlnDir "MultiFramework/MultiFramework.csproj") --no-build --output $packageOutputDir /p:Configuration=Release /p:EndjinRepositoryUrl="https://github.com/endjin/Endjin.RecommendedPractices" /p:PackageVersion=0.0.1-local
+
+    If ($IsWindows) {
+        &nuget sources Remove -Name "EndjinRecommendedPracticesLocal"
+    }
+    Else {
+        &mono $pathToNuGet sources Remove -Name "EndjinRecommendedPracticesLocal"
+    }
 
     . nuget sources Remove -Name "EndjinRecommendedPracticesLocal"
 

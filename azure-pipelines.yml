@@ -19,7 +19,6 @@ jobs:
 - job: Build
   variables:
     NuGetToolVersion: '5.4.0'
-    NuGetAlias: 'mono /opt/hostedtoolcache/NuGet/$(NuGetToolVersion)/x64/nuget.exe'
   pool:
     vmImage: 'ubuntu-latest'
 
@@ -42,8 +41,6 @@ jobs:
       targetType: 'filePath'
       filePath: 'src/Endjin.RecommendedPractices.Nuget.Specs/run-tests.ps1'
       pwsh: true
-      arguments: >
-        -NuGetAlias "$(NuGetAlias)"
     displayName: Run tests
 
   - task: NuGetCommand@2
