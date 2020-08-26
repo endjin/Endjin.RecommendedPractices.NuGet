@@ -1,6 +1,6 @@
-param {
+param (
     [string] $NuGetAlias
-}
+)
 
 $ErrorActionPreference = 'Stop'
 $here = Split-Path -Parent $PSCommandPath
