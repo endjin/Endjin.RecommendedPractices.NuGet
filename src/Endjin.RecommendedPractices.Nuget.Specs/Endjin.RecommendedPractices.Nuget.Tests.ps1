@@ -31,10 +31,10 @@ function Invoke-NuGet {
     )
     
     If ($IsWindows) {
-        &nuget $command $subCommand @arguments
+        (&nuget $command $subCommand @arguments) | Write-Host
     }
     Else {
-        &mono $pathToNuGet $command $subCommand @arguments
+        (&mono $pathToNuGet $command $subCommand @arguments) | Write-Host
     }
 }
 
