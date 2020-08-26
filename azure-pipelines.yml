@@ -20,7 +20,7 @@ jobs:
   variables:
     NuGetToolVersion: '5.4.0'
   pool:
-    vmImage: 'ubuntu-latest'
+    vmImage: 'windows-latest'
 
   steps:
   # GitVersion doesn't work on build agenst without the global tools workaround step

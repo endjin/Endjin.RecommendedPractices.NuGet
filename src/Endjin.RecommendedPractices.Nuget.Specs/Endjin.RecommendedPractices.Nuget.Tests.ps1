@@ -30,6 +30,8 @@ function Invoke-NuGet {
         $arguments
     )
     
+    Write-Host "`nRunning: nuget $command $subcommand $($arguments -join ' ')`n"
+
     If ($IsWindows) {
         (&nuget $command $subCommand @arguments) | Write-Host
     }
