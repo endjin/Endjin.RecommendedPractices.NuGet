@@ -44,8 +44,6 @@ Describe 'Packaging tests' {
         &mono $pathToNuGet sources Remove -Name "EndjinRecommendedPracticesLocal"
     }
 
-    . nuget sources Remove -Name "EndjinRecommendedPracticesLocal"
-
     It 'should create a nupkg file for the SingleFramework project' {
         (Join-Path $packageOutputDir "SingleFramework.0.0.1-local.nupkg") | Should -Exist
     }
