@@ -1,6 +1,16 @@
+param {
+    [string] $NuGetAlias
+}
+
 $ErrorActionPreference = 'Stop'
 $here = Split-Path -Parent $PSCommandPath
 $pesterVer = '4.10.1'
+
+if ($NuGetAlias) {
+    Write-Host "Setting alias with name 'nuget' to value '$NuGetAlias'"
+    Set-Alias -Name nuget -Value $NuGetAlias
+}
+
 try {
     [array]$existingModule = Get-Module -ListAvailable Pester
     if (!$existingModule -or ($existingModule.Version -notcontains $pesterVer)) {

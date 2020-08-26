@@ -42,6 +42,8 @@ jobs:
       targetType: 'filePath'
       filePath: 'src/Endjin.RecommendedPractices.Nuget.Specs/run-tests.ps1'
       pwsh: true
+      arguments: >
+        -NuGetAlias $(NuGetAlias)
     displayName: Run tests
 
   - task: NuGetCommand@2
