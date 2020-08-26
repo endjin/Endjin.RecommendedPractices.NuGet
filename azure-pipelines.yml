@@ -18,7 +18,8 @@ resources:
 jobs:
 - job: Build
   variables:
-    NuGetAlias: 'mono /opt/hostedtoolcache/NuGet/5.4.0/x64/nuget.exe'
+    NuGetToolVersion: '5.4.0'
+    NuGetAlias: 'mono /opt/hostedtoolcache/NuGet/$(NuGetToolVersion)/x64/nuget.exe'
   pool:
     vmImage: 'ubuntu-latest'
 
@@ -34,7 +35,7 @@ jobs:
 
   - task: NuGetToolInstaller@1
     inputs:
-      versionSpec: '5.4.0'
+      versionSpec: '$(NuGetToolVersion)'
 
   - task: PowerShell@2
     inputs:
