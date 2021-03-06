@@ -26,7 +26,6 @@
       technical requirement to specify the license in projects that don't produce packages.)
     -->
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
