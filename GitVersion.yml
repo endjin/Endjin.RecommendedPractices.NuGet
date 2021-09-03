@@ -3,3 +3,4 @@ branches:
   master:
     tag: preview
     increment: Minor
+next-version: "1.3"
