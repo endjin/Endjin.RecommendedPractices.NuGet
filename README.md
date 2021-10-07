@@ -27,7 +27,7 @@ The NuGet packages for the project, hosted on NuGet.org are:
 
 ## Licenses
 
-[![GitHub license](https://img.shields.io/badge/License-Apache%202-blue.svg)](https://raw.githubusercontent.com/endjin/Endjin.RecommendedPractices.NuGet/master/LICENSE)
+[![GitHub license](https://img.shields.io/badge/License-Apache%202-blue.svg)](https://raw.githubusercontent.com/endjin/Endjin.RecommendedPractices.NuGet/main/LICENSE)
 
 This project is available under the Apache 2.0 open source license.
 
