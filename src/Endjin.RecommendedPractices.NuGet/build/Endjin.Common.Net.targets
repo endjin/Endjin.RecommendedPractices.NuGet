@@ -66,5 +66,8 @@
         <PackageReference Condition="$(EndjinDisableCodeAnalysis) != 'true'" Include="StyleCop.Analyzers" Version="1.1.118">
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
+        <PackageReference Condition="$(EndjinDisableCodeAnalysis) != 'true'" Include="Roslynator.Analyzers" Version="3.2.2">
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
     </ItemGroup>
 </Project>
