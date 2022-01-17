@@ -32,4 +32,7 @@
 
   <Import Project="$(MSBuildThisFileDirectory)Endjin.Common.GitHub.props" />
 
+  <PropertyGroup>
+    <EndjinProjectPropsPath>$(MSBuildThisFileDirectory)Endjin.Project.props</EndjinProjectPropsPath>
+  </PropertyGroup>
 </Project>

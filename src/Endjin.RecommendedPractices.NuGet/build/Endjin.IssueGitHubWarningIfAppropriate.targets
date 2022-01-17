@@ -1,0 +1,62 @@
+<!--
+    In V1, we always added an implicit reference to the GitHub sourcelink components. As of V2, we
+    support use in projects that are not in GitHub. However, we anticipate that most V1->V2
+    migrations will want to keep GitHub sourcelink, so we want to make it hard to lose that by
+    accident. Developers will need to change their reference from Enddin.RecommendedPractices to
+    Endjin.RecommendedPractices.GitHub to retain the behaviour they had from V1, and we want to
+    warn them if they appear not to have noticed.
+
+    So this file adds mechanisms to detect when GitHub is in use. If it is, and if the project
+    is not using Endjin.RecommendedPractices.GitHub, then unless the developer has set the
+    EndjinDisableGitHubSourceLinkWarning property to true, we will issue a warning suggesting
+    they change their reference to Endjin.RecommendedPractices.GitHub.
+
+    The work we need to do for this warning produces some outputs that are potentially useful.
+    These will be set by the EndjinDetectGitHub task, so consumers of this package that want
+    to use these should only do so in tasks that depend on EndjinDetectGitHub.
+
+        EndjinProjectIsInGitRepo        true if the project is in a folder associated with a Git repo
+        EndjinProjectIsInGitHubRepo     true if the project is in a folder associated with a Git repo
+        EndjinGitHubUrl                 The URL of the GitHub project
+        EndjinGitHubOrg                 The GitHub organization/account name
+        EndjinGitHubProject             The GitHub project name
+-->
+
+<Project ToolsVersion="14.0"
+    xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
+    InitialTargets="_EndjinIssueGitHubWarningIfAppropriate">
+
+    <Target Name="EndjinDetectGitHub">
+        <Microsoft.Build.Tasks.Git.LocateRepository Path="$(MSBuildProjectDirectory)" RemoteName="$(GitRepositoryRemoteName)" ConfigurationScope="$(GitRepositoryConfigurationScope)">
+
+            <Output TaskParameter="WorkingDirectory" PropertyName="_EndjinWorkingDirectory" />
+            <Output TaskParameter="RepositoryId" PropertyName="_EndjinGitRepositoryId" />
+            <Output TaskParameter="Url" PropertyName="_EndjinUrl" />
+            <!-- <Output TaskParameter="RevisionId" PropertyName="SourceRevisionId" Condition="'$(SourceRevisionId)' == ''" /> -->
+        </Microsoft.Build.Tasks.Git.LocateRepository>
+        <PropertyGroup>
+            <EndjinProjectIsInGitRepo Condition="'$(_EndjinWorkingDirectory)'!=''">true</EndjinProjectIsInGitRepo>
+            <EndjinProjectIsInGitRepo Condition="'$(EndjinProjectIsInGitRepo)'==''">false</EndjinProjectIsInGitRepo>
+        </PropertyGroup>
+
+        <PropertyGroup Condition="'$(EndjinProjectIsInGitRepo)'!='true'">
+            <EndjinProjectIsInGitHubRepo Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(_EndjinUrl), `(https://|ssh://[^@]*@)github.com/([^/]*)/([^/]*)`))">true</EndjinProjectIsInGitHubRepo>
+            <EndjinProjectIsInGitHubRepo Condition="'$(EndjinProjectIsInGitRepo)'==''">false</EndjinProjectIsInGitRepo>
+        </PropertyGroup>
+
+        <PropertyGroup Condition="'$(EndjinProjectIsInGitHubRepo)'=='true'">
+            <EndjinGitHubUrl>$(_EndjinUrl)</EndjinGitHubUrl>
+            <EndjinGitHubOrg Condition="'$(EndjinProjectIsInGitRepo)'=='true'">$([System.Text.RegularExpressions.Regex]::Match($(_EndjinUrl), `(https://|ssh://git@)github.com/([^/]*)/([^/]*)`).Groups[2].Value)</EndjinGitHubOrg>
+            <EndjinGitHubProject>$([System.Text.RegularExpressions.Regex]::Match($(_EndjinUrl), `(https://|ssh://[^@]*@)github.com/([^/]*)/([^/]*)(\.git)?`).Groups[3].Value)</EndjinGitHubProject>
+            <EndjinGitHubProject Condition="$(EndjinGitHubProject.EndsWith('.git'))">$(EndjinGitHubProject.Substring(0, $(EndjinGitHubProject.LastIndexOf('.'))))</EndjinGitHubProject>
+        </PropertyGroup>
+    </Target>
+
+    <Target Name="_EndjinIssueGitHubWarningIfAppropriate" DependsOn="EndjinDetectGitHub">
+
+        <Error
+            Condition=" ('$(EndjinProjectIsInGitHubRepo)' == 'true') And ('$(_EndjinGitHubPackageImported)' != 'true') And ($(EndjinDisableGitHubSourceLinkWarning) != 'true') "
+            Text="The Endjin.RecommendedPractices NuGet package stopped automatically enabling GitHub Source Link in V2. You appear to be using GitHub, so if you still want Source Link, change the reference to Endjin.RecommendedPractices.GitHub. Set the EndjinDisableGitHubSourceLinkWarning build property to true in your csproj file if you do not want Source Link."
+            />
+    </Target>
+</Project>

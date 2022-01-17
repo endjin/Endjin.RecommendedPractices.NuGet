@@ -10,6 +10,19 @@
         <authors>endjin</authors>
 
         <developmentDependency>true</developmentDependency>
+        <dependencies>
+            <!--
+            As of v2, we no longer presume use of GitHub. However, we want to detect when a project
+            is using GitHub but has not switched to the Endjin.RecommendedPractices.GitHub package.
+            In most cases, we expect that to be a mistake caused by developers not knowing that
+            when they upgrade from v1 to v2, they need to change the reference if they want the
+            same behaviour. We want to issue a warning when this seems to have happened.
+            To be able to detect when a project is hosted on GitHub, we use the tasks package
+            that the GitHub sourcelink packages also use. This is a development dependency, so
+            it doesn't have any impact on project output.
+            -->
+            <dependency id="Microsoft.Build.Tasks.Git" version="1.0.0" />
+        </dependencies>
     </metadata>
 
     <files>
