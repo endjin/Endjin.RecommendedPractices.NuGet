@@ -23,16 +23,8 @@ Split the GitHub-specific aspects that are in v1 of `Endjin.RecommendedPractices
 - contain the GitHub-specific elements
 - have a transient dependency on `Endjin.RecommendedPractices`
 
-That second point is important because it enables projects that are happy with how v1 works today can continue to have a single package reference. It will be to `Endjin.RecommendedPractices.GitHub` instead of `Endjin.RecommendedPractices`, but it's a relatively small change.
+That second point is important because it enables projects that are happy with how v1 works today can continue to have a single package reference. It will be to `Endjin.RecommendedPractices.GitHub` instead of `Endjin.RecommendedPractices`, but it's a relatively small change. To ease the transition, the new `Endjin.RecommendedPractices` will detect when it is in use on a GitHub-backed project, and will suggest using `Endjin.RecommendedPractices.GitHub` instead. (This warning can be disabled by setting a property in cases where it's really what someone wants.)
 
-
-## Unresolved issue
-
-All projects using v1 currently use the GitHub functionality. What do we want the behaviour to be when they upgrade to v2? A downside of this split is that the upgrade would cause this functionality to stop working silently. The effect of this would be that projects currently enjoying source-level debugging through VS's GitHub integration would suddenly stop doing that.
-
-One way to avoid this would be for the main `Endjin.RecommendedPractices` package to detect whether a source code host package is present. (We could have that package set some build variable to indicate this.) And it could then issue a warning suggesting that the developer might want to change the reference to `Endjin.RecommendedPractices.GitHub`. And for those who don't want it, we'd need to advise them to set a variable themselves to indicate that they know about this issue and specifically don't want the GitHub bits.
-
-An alternative would be to keep `Endjin.RecommendedPractices` doing exactly what it does now, but to move all the guts into some `Endjin.RecommendedPractices.NonSourceHostSpecific` component, so that developers who need the scenarios outlined above can get them.
 
 ## Consequences
 
@@ -44,6 +36,3 @@ This solves the problems above:
 It has an additional benefit:
 
 - It it were to look useful in the future, we could add other host-specific packages
-
-
-It also has a downsides—none of the solutions to the unresolved issue above looks ideal.
