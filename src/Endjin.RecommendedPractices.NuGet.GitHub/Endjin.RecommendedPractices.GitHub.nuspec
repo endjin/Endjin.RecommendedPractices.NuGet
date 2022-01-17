@@ -2,14 +2,18 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
 
     <metadata>
-        <id>Endjin.RecommendedPractices</id>
+        <id>Endjin.RecommendedPractices.GitHub</id>
 
         <!-- This is overridden by the automatic build. It is present here to avoid validation failures. -->
         <version>0.3.0</version>
-        <description>Applies endjin standard practices to a .NET project.</description>
+        <description>Applies endjin standard practices to a .NET project hosted in GitHub.</description>
         <authors>endjin</authors>
 
         <developmentDependency>true</developmentDependency>
+        <dependencies>
+            <dependency id="Microsoft.SourceLink.GitHub" version="1.0.0" />
+            <dependency id="Endjin.RecommendedPractices" version="$version$" />
+        </dependencies>
     </metadata>
 
     <files>

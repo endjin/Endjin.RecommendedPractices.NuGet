@@ -30,11 +30,6 @@
 -->
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <Import Project="$(MSBuildThisFileDirectory)Endjin.Common.Copyright.props" />
-  <Import Project="$(MSBuildThisFileDirectory)Endjin.Common.NuGet.props" />
-  <Import Project="$(MSBuildThisFileDirectory)Endjin.Common.Net.props" />
+  <Import Project="$(MSBuildThisFileDirectory)Endjin.Common.GitHub.props" />
 
-  <PropertyGroup>
-    <EndjinProjectPropsPath>$(MSBuildThisFileDirectory)Endjin.Project.props</EndjinProjectPropsPath>
-  </PropertyGroup>
 </Project>
