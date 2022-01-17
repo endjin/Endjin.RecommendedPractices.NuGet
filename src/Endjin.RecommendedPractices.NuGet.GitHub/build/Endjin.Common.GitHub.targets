@@ -8,7 +8,7 @@
         run before Compile because the Compile Target runs some code generation tasks
         that will in some circumstances attempt to use some of these properties.
     -->
-    <Target Name="_EndjinSetGitHubProperties" BeforeTargets="Compile" DependsOn="EndjinDetectGitHub">
+    <Target Name="_EndjinSetGitHubProperties" BeforeTargets="Compile" DependsOnTargets="EndjinDetectGitHub">
         <PropertyGroup>
             <GitHubOrg>$([System.Text.RegularExpressions.Regex]::Match($(EndjinRepositoryUrl), `https://github.com/([^/]*)/([^/]*)`).Groups[1].Value)</GitHubOrg>
             <GitHubProject>$([System.Text.RegularExpressions.Regex]::Match($(EndjinRepositoryUrl), `https://github.com/([^/]*)/([^/]*)`).Groups[2].Value)</GitHubProject>
@@ -18,8 +18,6 @@
             <RepositoryUrl>https://github.com/$(GitHubOrg)/$(GitHubProject).git</RepositoryUrl>
             <PackageProjectUrl>https://github.com/$(GitHubOrg)/$(GitHubProject)</PackageProjectUrl>
             <PackageReleaseNotes>See https://github.com/$(GitHubOrg)/$(GitHubProject)/releases/</PackageReleaseNotes>
-
-            <RepositoryType>git</RepositoryType>
         </PropertyGroup>
     </Target>
 

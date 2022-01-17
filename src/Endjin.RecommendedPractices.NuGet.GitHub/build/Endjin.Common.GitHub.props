@@ -1,3 +1,21 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+    <PropertyGroup>
+        <!--
+            All the other GitHub-related properties depend on the outputs of the EndjinDetectGitHub
+            Target from the Endjin.RecommendedPractices package, so they can't be set in
+            a properties file - Targets don't run until after the property evaluation stage has
+            completed.
+            This is on the only property that we can set up front.
+        -->
+        <RepositoryType>git</RepositoryType>
+
+        <!--
+            This lets Endjin.RecommendedPractices know that the GitHub package is present, and that
+            it doesn't need to issue the warning about Source Link no longer being automatic.
+        -->
+
+        <_EndjinGitHubPackageImported>true</_EndjinGitHubPackageImported>
+    </PropertyGroup>
+
 </Project>

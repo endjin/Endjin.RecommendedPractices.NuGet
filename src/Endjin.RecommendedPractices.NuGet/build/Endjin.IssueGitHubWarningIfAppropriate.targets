@@ -27,7 +27,20 @@
     InitialTargets="_EndjinIssueGitHubWarningIfAppropriate">
 
     <Target Name="EndjinDetectGitHub">
-        <Microsoft.Build.Tasks.Git.LocateRepository Path="$(MSBuildProjectDirectory)" RemoteName="$(GitRepositoryRemoteName)" ConfigurationScope="$(GitRepositoryConfigurationScope)">
+        <PropertyGroup>
+            <!--
+                Ideally we wouldn't need this hack.
+                Having worked out how to use the LocateRepository it became apparent that
+                there's no way to prevent it from issuing a warning in the case where there's
+                no GitHub repo. Unfortunately, that's exactly the new scenario we're looking
+                to support with this file in Endjin.RecommendedPractices v2.
+                So we use this rather grotty hack to try to locate the .git folder, and only
+                invoke the LocateRepository task (which extracts all the info) if it's there.
+            -->
+            <_EndjinGitFolderFound Condition="Exists('$(MSBuildProjectDirectory)/.git') Or Exists('$(MSBuildProjectDirectory)/../.git') Or Exists('$(MSBuildProjectDirectory)/../../.git') Or Exists('$(MSBuildProjectDirectory)/../../../.git') Or Exists('$(MSBuildProjectDirectory)/../../../../.git') Or Exists('$(MSBuildProjectDirectory)/../../../../../.git') Or Exists('$(MSBuildProjectDirectory)/../../../../../../.git')">true</_EndjinGitFolderFound>
+        </PropertyGroup>
+
+        <Microsoft.Build.Tasks.Git.LocateRepository Condition="'$(_EndjinGitFolderFound)' == 'true'" Path="$(MSBuildProjectDirectory)" RemoteName="$(GitRepositoryRemoteName)" ConfigurationScope="$(GitRepositoryConfigurationScope)">
 
             <Output TaskParameter="WorkingDirectory" PropertyName="_EndjinWorkingDirectory" />
             <Output TaskParameter="RepositoryId" PropertyName="_EndjinGitRepositoryId" />
@@ -39,20 +52,20 @@
             <EndjinProjectIsInGitRepo Condition="'$(EndjinProjectIsInGitRepo)'==''">false</EndjinProjectIsInGitRepo>
         </PropertyGroup>
 
-        <PropertyGroup Condition="'$(EndjinProjectIsInGitRepo)'!='true'">
+        <PropertyGroup Condition="'$(EndjinProjectIsInGitRepo)'=='true'">
             <EndjinProjectIsInGitHubRepo Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(_EndjinUrl), `(https://|ssh://[^@]*@)github.com/([^/]*)/([^/]*)`))">true</EndjinProjectIsInGitHubRepo>
-            <EndjinProjectIsInGitHubRepo Condition="'$(EndjinProjectIsInGitRepo)'==''">false</EndjinProjectIsInGitRepo>
+            <EndjinProjectIsInGitHubRepo Condition="'$(EndjinProjectIsInGitRepo)'==''">false</EndjinProjectIsInGitHubRepo>
         </PropertyGroup>
 
         <PropertyGroup Condition="'$(EndjinProjectIsInGitHubRepo)'=='true'">
             <EndjinGitHubUrl>$(_EndjinUrl)</EndjinGitHubUrl>
-            <EndjinGitHubOrg Condition="'$(EndjinProjectIsInGitRepo)'=='true'">$([System.Text.RegularExpressions.Regex]::Match($(_EndjinUrl), `(https://|ssh://git@)github.com/([^/]*)/([^/]*)`).Groups[2].Value)</EndjinGitHubOrg>
+            <EndjinGitHubOrg>$([System.Text.RegularExpressions.Regex]::Match($(_EndjinUrl), `(https://|ssh://git@)github.com/([^/]*)/([^/]*)`).Groups[2].Value)</EndjinGitHubOrg>
             <EndjinGitHubProject>$([System.Text.RegularExpressions.Regex]::Match($(_EndjinUrl), `(https://|ssh://[^@]*@)github.com/([^/]*)/([^/]*)(\.git)?`).Groups[3].Value)</EndjinGitHubProject>
             <EndjinGitHubProject Condition="$(EndjinGitHubProject.EndsWith('.git'))">$(EndjinGitHubProject.Substring(0, $(EndjinGitHubProject.LastIndexOf('.'))))</EndjinGitHubProject>
         </PropertyGroup>
     </Target>
 
-    <Target Name="_EndjinIssueGitHubWarningIfAppropriate" DependsOn="EndjinDetectGitHub">
+    <Target Name="_EndjinIssueGitHubWarningIfAppropriate" DependsOnTargets="EndjinDetectGitHub">
 
         <Error
             Condition=" ('$(EndjinProjectIsInGitHubRepo)' == 'true') And ('$(_EndjinGitHubPackageImported)' != 'true') And ($(EndjinDisableGitHubSourceLinkWarning) != 'true') "
