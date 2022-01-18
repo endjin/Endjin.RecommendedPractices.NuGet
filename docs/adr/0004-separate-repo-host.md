@@ -23,7 +23,7 @@ Split the GitHub-specific aspects that are in v1 of `Endjin.RecommendedPractices
 - contain the GitHub-specific elements
 - have a transient dependency on `Endjin.RecommendedPractices`
 
-That second point is important because it enables projects that are happy with how v1 works today can continue to have a single package reference. It will be to `Endjin.RecommendedPractices.GitHub` instead of `Endjin.RecommendedPractices`, but it's a relatively small change. To ease the transition, the new `Endjin.RecommendedPractices` will detect when it is in use on a GitHub-backed project, and will suggest using `Endjin.RecommendedPractices.GitHub` instead. (This warning can be disabled by setting a property in cases where it's really what someone wants.)
+That second point is important because it enables projects that are happy with how v1 works today to continue to have a single package reference. It will be to `Endjin.RecommendedPractices.GitHub` instead of `Endjin.RecommendedPractices`, but it's a relatively small change. To ease the transition, the new `Endjin.RecommendedPractices` will detect when it is in use on a GitHub-backed project, and will suggest using `Endjin.RecommendedPractices.GitHub` instead. (This warning can be disabled by setting a property in cases where someone really wants to use `Endjin.RecommendedPractices` without Source Link in a GitHub repo.)
 
 
 ## Consequences
