@@ -7,17 +7,17 @@
         set all these NuGet properties during the Target execution phase. We make this
         run before Compile because the Compile Target runs some code generation tasks
         that will in some circumstances attempt to use some of these properties.
+
+        Although this is the GitHub-specific package, the basic Endjin.RecommendedPractices
+        detects the presence of a Git repo and determines the org and project names as
+        part of that, so we just depend on the _EndjinSetGitHubProperties task from that
+        package and use its outputs here to set the relevant NuGet package properties.
     -->
     <Target Name="_EndjinSetGitHubProperties" BeforeTargets="Compile" DependsOnTargets="EndjinDetectGitHub">
         <PropertyGroup>
-            <GitHubOrg>$([System.Text.RegularExpressions.Regex]::Match($(EndjinRepositoryUrl), `https://github.com/([^/]*)/([^/]*)`).Groups[1].Value)</GitHubOrg>
-            <GitHubProject>$([System.Text.RegularExpressions.Regex]::Match($(EndjinRepositoryUrl), `https://github.com/([^/]*)/([^/]*)`).Groups[2].Value)</GitHubProject>
-        </PropertyGroup>
-
-        <PropertyGroup>
-            <RepositoryUrl>https://github.com/$(GitHubOrg)/$(GitHubProject).git</RepositoryUrl>
-            <PackageProjectUrl>https://github.com/$(GitHubOrg)/$(GitHubProject)</PackageProjectUrl>
-            <PackageReleaseNotes>See https://github.com/$(GitHubOrg)/$(GitHubProject)/releases/</PackageReleaseNotes>
+            <RepositoryUrl>https://github.com/$(EndjinGitHubOrg)/$(EndjinGitHubProject).git</RepositoryUrl>
+            <PackageProjectUrl>https://github.com/$(EndjinGitHubOrg)/$(EndjinGitHubProject)</PackageProjectUrl>
+            <PackageReleaseNotes>See https://github.com/$(EndjinGitHubOrg)/$(EndjinGitHubProject)/releases/</PackageReleaseNotes>
         </PropertyGroup>
     </Target>
 
