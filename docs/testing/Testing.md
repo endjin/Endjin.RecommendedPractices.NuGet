@@ -13,7 +13,7 @@ nuget pack .\Endjin.RecommendedPractices.NuGet.GitHub\Endjin.RecommendedPractice
 
 This will build the `nupkg` files directly into your local folder.
 
-Next, decide where you're going to put your local package store. It just needs to be a local folder, and it can go wherever you like. I'm using `C:\dev\NuGetLocal`.
+Next, decide where you're going to put your local package store. It just needs to be a local folder, and it can go wherever you like. The following examples use `C:\dev\NuGetLocal`. These commands will create the folder if it doesn't already exist.
 
 ```
 nuget add Endjin.RecommendedPractices.9.9.9.nupkg -source C:\dev\NuGetLocal
@@ -29,7 +29,7 @@ The [PackAndReleaseForTest.ps1](../../src/PackAndReleaseForTest.ps1) file perfor
 You can optionally specify the local repository path as the second argument. (It defaults to `C:\dev\NuGetLocal`).
 
 
-You can use this by adding a `NuGet.config` file to any .NET solution folder with these contents:
+You can use the local package feed by adding a `NuGet.config` file to any .NET solution folder with these contents:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -38,9 +38,10 @@ You can use this by adding a `NuGet.config` file to any .NET solution folder wit
     <add key="NuGetLocal" value="C:\dev\NuGetLocal" />
   </packageSources>
 </configuration>```
+```
 
-This works for Visual Studio. It's not clear if it will work for command line development—various Stack Overflow posts suggest you need a `<config>` section setting either `repositoryPath` or `globalPackagesFolder` or both, but in my experience, this goes on to break in quite hard to diagnose ways, so I wouldn't recommend it. The alternative is to add this feed to your global feed configuration using either the `nuget` tool or the Visual Studio feed settings page.
+This works for Visual Studio. It's not clear if it will work for command line development—various Stack Overflow posts suggest you need a `<config>` section that adds the local path value under two different keys: `repositoryPath` and `globalPackagesFolder`. But in my experience, this goes on to break in quite hard to diagnose ways, so I wouldn't recommend it. The alternative is to add this feed to your global feed configuration using either the `nuget` tool or the Visual Studio feed settings page.
 
-With this in place you can add a reference to the versions of the packages in your local feed.
+However you choose to do it, once the local feed is available, you can add a reference to the versions of the packages in your local feed.
 
 Any time you want to try a change, you need to bump the version number so the tooling knows something is different.

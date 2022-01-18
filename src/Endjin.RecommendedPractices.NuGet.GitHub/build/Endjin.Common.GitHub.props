@@ -6,7 +6,7 @@
             Target from the Endjin.RecommendedPractices package, so they can't be set in
             a properties file - Targets don't run until after the property evaluation stage has
             completed.
-            This is on the only property that we can set up front.
+            This is the only NuGet package property that we can set up front.
         -->
         <RepositoryType>git</RepositoryType>
 
