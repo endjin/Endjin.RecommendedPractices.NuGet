@@ -36,3 +36,5 @@ This solves the problems above:
 It has an additional benefit:
 
 - It it were to look useful in the future, we could add other host-specific packages
+
+This also leaves the door open for supporting other source hosts, most notably Azure DevOps. We've not added support for Source Link to Azure DevOps yet, because we don't currently have any scenarios that require it, but this split means it would become a relatively straightforward thing to add.
