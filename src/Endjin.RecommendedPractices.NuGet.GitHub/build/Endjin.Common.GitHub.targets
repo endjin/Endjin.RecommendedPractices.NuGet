@@ -1,0 +1,24 @@
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <!--
+        These properties would normally be set during the MSBuild evalution phase, so you'd
+        expect them to go in a .props file. However, we're using a Task to retrieve the
+        GitHub repo details, and you can only run tasks in a Target. So we have to
+        set all these NuGet properties during the Target execution phase. We make this
+        run before Compile because the Compile Target runs some code generation tasks
+        that will in some circumstances attempt to use some of these properties.
+
+        Although this is the GitHub-specific package, the basic Endjin.RecommendedPractices
+        detects the presence of a Git repo and determines the org and project names as
+        part of that, so we just depend on the _EndjinSetGitHubProperties task from that
+        package and use its outputs here to set the relevant NuGet package properties.
+    -->
+    <Target Name="_EndjinSetGitHubProperties" BeforeTargets="Compile" DependsOnTargets="EndjinDetectGitHub">
+        <PropertyGroup>
+            <RepositoryUrl>https://github.com/$(EndjinGitHubOrg)/$(EndjinGitHubProject).git</RepositoryUrl>
+            <PackageProjectUrl>https://github.com/$(EndjinGitHubOrg)/$(EndjinGitHubProject)</PackageProjectUrl>
+            <PackageReleaseNotes>See https://github.com/$(EndjinGitHubOrg)/$(EndjinGitHubProject)/releases/</PackageReleaseNotes>
+        </PropertyGroup>
+    </Target>
+
+</Project>

@@ -2,11 +2,6 @@
   <PropertyGroup>
     <Authors>Endjin Limited</Authors>
     <!-- Note: Copyright property is not specific to NuGet so we set it elsewhere -->
-    <RepositoryUrl>https://github.com/$(GitHubOrg)/$(GitHubProject).git</RepositoryUrl>
-    <PackageProjectUrl>https://github.com/$(GitHubOrg)/$(GitHubProject)</PackageProjectUrl>
-    <PackageReleaseNotes>See https://github.com/$(GitHubOrg)/$(GitHubProject)/releases/</PackageReleaseNotes>
-
-    <RepositoryType>git</RepositoryType>
 
     <!--
       We require license acceptance, but since we use different licenses in different scenarios,
