@@ -21,7 +21,7 @@ Write-Host "Package output directory: $packageOutputDir"
 
 # Clear down anything left from previous run
 Remove-Item $packageOutputDir -Force -Recurse -ErrorAction SilentlyContinue
-@(".editorconfig","PackageIcon.png","stylecop.json","StyleCop.ruleset") | ForEach-Object { Join-Path $specsSlnDir $_ } | Remove-Item -Force -ErrorAction SilentlyContinue
+@(".editorconfig","PackageIcon.png","stylecop.json") | ForEach-Object { Join-Path $specsSlnDir $_ } | Remove-Item -Force -ErrorAction SilentlyContinue
 Remove-Item "$env:userprofile\.nuget\packages\endjin.recommendedpractices\0.0.1-local" -Force -Recurse -ErrorAction SilentlyContinue
 
 $pathToNuGet = Get-Command nuget.exe | Select-Object -ExpandProperty Source

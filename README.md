@@ -10,10 +10,12 @@ When you add a reference to this package via NuGet, it does the following:
 * enables sourcelink on projects that are building NuGet packages
 * makes warnings errors
 * disables the more vexing Roslynator and StyleCop warnings
-* provides default stylecop.json, StyleCop.ruleset, and .editorconfig files at the solution level if you don't yet have theses
+* provides default stylecop.json and .editorconfig files at the solution level if you don't yet have theses
 * detects whether you're building for a NuGet package or a non-packaged target, and adjusts the warning set slightly accordingly (unless you ask it not to)
 * ensures that if you have a local.setting.json it's configured to be copied to the output folder if it changes
 * adds a reference to StyleCop.Analyzers
+
+The set of code analysis rules will gradually change because the .NET SDK incorporates new ones over time. If you want to pin to a particular era of rules, you can set the `EnableNETAnalyzers` build property to false, and then add a reference to the [`Microsoft.CodeAnalysis.NetAnalyzers` NuGet package](https://www.nuget.org/packages/Microsoft.CodeAnalysis.NetAnalyzers) instead.
 
 ## CI / CD
 
