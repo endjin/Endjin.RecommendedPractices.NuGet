@@ -107,6 +107,7 @@ dotnet_diagnostic.CA1014.severity = None
 
 # Standard exception constructors - not helpful when the exception absolutely needs certain information
 dotnet_diagnostic.CA1032.severity = None
+dotnet_diagnostic.RCS1194.severity = None
 
 # Localize string constants - apps that want localization can turn this back on
 dotnet_diagnostic.CA1303.severity = None
