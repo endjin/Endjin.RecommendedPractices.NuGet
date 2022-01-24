@@ -53,13 +53,9 @@
       the project is set up the way it should be, and make a recommendation if not.
     -->
     <Error
-      Condition="('$(_EndjinAutoPackagesLock)' == 'true') And ('$(RestorePackagesWithLockFile)' != '$(_EndjinExpectedRestorePackagesWithLockFile)')"
+      Condition="('$(_EndjinAutoPackagesLock)' == 'true') And (('$(RestorePackagesWithLockFile)' != '$(_EndjinExpectedRestorePackagesWithLockFile)') or (('$(ContinuousIntegrationBuild)' == 'true') And ('$(RestoreLockedMode)' != '$(_EndjinExpectedCiBuildRestoreLockedMode)')))"
       Text="Properties for package lock file generation are not set correctly, and they should normally be enabled for this project type. You can suppress this message by setting the EndjinDisableAutoPackagesLock build variable to true, but in most cases you should add the following PropertyGroup to your project file:&#x0A;&lt;PropertyGroup&gt;&#x0A;  &lt;RestorePackagesWithLockFile&gt;true&lt;/RestorePackagesWithLockFile&gt;&#x0A;  &lt;RestoreLockedMode Condition=&quot;%24(ContinuousIntegrationBuild) == 'true'&quot;&gt;true&lt;/RestoreLockedMode&gt;&#x0A;&lt;/PropertyGroup&gt;&#x0A;"
       />
 
-    <Error
-      Condition="('$(_EndjinAutoPackagesLock)' == 'true') And ('$(ContinuousIntegrationBuild)' == 'true') And ('$(RestoreLockedMode)' != '$(_EndjinExpectedCiBuildRestoreLockedMode)')"
-      Text="Properties for package lock file generation are not set correctly, and they should normally be enabled for this project type. You can suppress this message by setting the EndjinDisableAutoPackagesLock build variable to true, but in most cases you should add the following PropertyGroup to your project file:&#x0A;&lt;PropertyGroup&gt;&#x0A;  &lt;RestorePackagesWithLockFile&gt;true&lt;/RestorePackagesWithLockFile&gt;&#x0A;  &lt;RestoreLockedMode Condition=&quot;%24(ContinuousIntegrationBuild) == 'true'&quot;&gt;true&lt;/RestoreLockedMode&gt;&#x0A;&lt;/PropertyGroup&gt;&#x0A;"
-      />
   </Target>
 </Project>
