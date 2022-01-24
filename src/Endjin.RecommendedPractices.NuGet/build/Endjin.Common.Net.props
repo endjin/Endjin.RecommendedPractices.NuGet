@@ -70,6 +70,6 @@
 
   <ItemGroup Condition="($(EndjinDisableCodeAnalysis) != 'true') and (Exists('$(SolutionDir)stylecop.json'))">
     <AdditionalFiles Include="$(SolutionDir)stylecop.json" Link="stylecop.json" />
-  </ItemGroup>  
+  </ItemGroup>
 
 </Project>
