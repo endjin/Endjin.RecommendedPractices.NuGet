@@ -3,5 +3,6 @@
     <Import Project="$(MSBuildThisFileDirectory)Endjin.VerifyImport.targets" />
     <Import Project="$(MSBuildThisFileDirectory)Endjin.Common.Net.targets" />
     <Import Project="$(MSBuildThisFileDirectory)Endjin.IssueGitHubWarningIfAppropriate.targets" />
+    <Import Project="$(MSBuildThisFileDirectory)Endjin.AutoPackagesLock.targets" />
 
 </Project>
