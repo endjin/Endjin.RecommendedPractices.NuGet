@@ -5,9 +5,8 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <!--
-    We presume that a solution exists. Two of the important jobs we do are creating a
-    default StyleCop configuration file if none exists, and creating a default .editorconfig
-    if none exists. These are both solution-level items.
+    We presume that a solution exists. One of the important jobs we do is creating a
+    default .editorconfig file if none exists. This is a solution-level item.
     Building in Visual Studio this isn't a problem because that always builds the solution.
     However, with the .NET CLI it's often not the case. And it seems that developing in
     VS code also throws up issues, possibly because it's using the CLI too, or working in
@@ -62,13 +61,6 @@
     <TreatSpecificWarningsAsErrors />
     <WarningsAsErrors />
 
-    <!--
-        Disable Roslynator warnings we disagree with.
-        Projects can reinstate this simply by setting:
-        
-        <NoWarn></NoWarn>
-    -->
-    <NoWarn>RCS1029</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -76,12 +68,8 @@
     <ci>true</ci>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <CodeAnalysisRuleSet>$(SolutionDir)StyleCop.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-
   <ItemGroup Condition="($(EndjinDisableCodeAnalysis) != 'true') and (Exists('$(SolutionDir)stylecop.json'))">
     <AdditionalFiles Include="$(SolutionDir)stylecop.json" Link="stylecop.json" />
-  </ItemGroup>  
+  </ItemGroup>
 
 </Project>

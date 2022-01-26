@@ -1,8 +1,0 @@
-<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-
-  <PropertyGroup>
-    <GitHubOrg>$([System.Text.RegularExpressions.Regex]::Match($(EndjinRepositoryUrl), `https://github.com/([^/]*)/([^/]*)`).Groups[1].Value)</GitHubOrg>
-    <GitHubProject>$([System.Text.RegularExpressions.Regex]::Match($(EndjinRepositoryUrl), `https://github.com/([^/]*)/([^/]*)`).Groups[2].Value)</GitHubProject>
-  </PropertyGroup>
-
-</Project>

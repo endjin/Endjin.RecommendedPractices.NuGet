@@ -47,7 +47,7 @@ jobs:
   - task: NuGetCommand@2
     inputs:
       command: 'pack'
-      packagesToPack: 'src/Endjin.RecommendedPractices.NuGet/Endjin.RecommendedPractices.nuspec'
+      packagesToPack: 'src/**/*.nuspec'
       versioningScheme: 'byEnvVar'
       versionEnvVar: 'GitVersion.SemVer'
 

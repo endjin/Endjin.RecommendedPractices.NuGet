@@ -2,7 +2,7 @@
     xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
     <!--
-        We set up code analysis to use solution-level StyleCop settings. There's no built-in way
+        We set up code analysis to use a solution-level .editorconfig file. There's no built-in way
         for a NuGet package to supply solution-level content so we just check to see if the
         relevant files exist, and if not, create them.
 
@@ -18,7 +18,6 @@
         which will also prevent the addition of the reference to StyleCop.Analyzers.
     -->
     <Target Name="_EndjinEnsureCodeAnalysisRuleSet" AfterTargets="BeforeBuild" BeforeTargets="CoreBuild">
-        <Copy Condition="($(EndjinDisableCodeAnalysis) != 'true') and (!Exists('$(CodeAnalysisRuleSet)'))" SourceFiles="$(MSBuildThisFileDirectory)StyleCop.ruleset" DestinationFiles="$(CodeAnalysisRuleSet)" />
         <Copy Condition="($(EndjinDisableCodeAnalysis) != 'true') and (!Exists('$(SolutionDir)stylecop.json'))" SourceFiles="$(MSBuildThisFileDirectory)stylecop.json" DestinationFiles="$(SolutionDir)stylecop.json" />
     </Target>
 
@@ -63,7 +62,15 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Condition="$(EndjinDisableCodeAnalysis) != 'true'" Include="StyleCop.Analyzers" Version="1.1.118">
+        <!--
+            Reference to preview version because there hasn't been a non-preview release in an age,
+            the language support is a long way behind on the last non-preview version, and the
+            package author says to use the preview versions.
+        -->
+        <PackageReference Condition="$(EndjinDisableCodeAnalysis) != 'true'" Include="StyleCop.Analyzers" Version="1.2.0-beta.376">
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Condition="$(EndjinDisableCodeAnalysis) != 'true'" Include="Roslynator.Analyzers" Version="3.3.0">
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
     </ItemGroup>
