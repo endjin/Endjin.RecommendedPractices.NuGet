@@ -4,4 +4,4 @@ branches:
     regex: ^master|main|develop/.*$
     tag: preview
     increment: patch
-next-version: "2.0"
+next-version: "2.1"
