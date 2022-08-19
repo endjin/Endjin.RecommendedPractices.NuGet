@@ -8,6 +8,7 @@
         <version>0.3.0</version>
         <description>Applies endjin standard practices to a .NET project.</description>
         <authors>endjin</authors>
+        <icon>images\EndjinIcon.png</icon>
 
         <developmentDependency>true</developmentDependency>
         <dependencies>
