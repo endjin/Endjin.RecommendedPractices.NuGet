@@ -8,6 +8,7 @@
         <version>0.3.0</version>
         <description>Applies endjin standard practices to a .NET project.</description>
         <authors>endjin</authors>
+        <icon>images\EndjinIcon.png</icon>
 
         <developmentDependency>true</developmentDependency>
         <dependencies>
@@ -26,6 +27,7 @@
     </metadata>
 
     <files>
+        <file src="..\images\**" target="images" />
         <file src="build\**" target="build" />
         <file src="build\**" target="buildMultiTargeting" />
     </files>

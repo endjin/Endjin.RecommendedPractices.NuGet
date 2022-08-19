@@ -67,10 +67,10 @@
             the language support is a long way behind on the last non-preview version, and the
             package author says to use the preview versions.
         -->
-        <PackageReference Condition="$(EndjinDisableCodeAnalysis) != 'true'" Include="StyleCop.Analyzers" Version="1.2.0-beta.406">
+        <PackageReference Condition="$(EndjinDisableCodeAnalysis) != 'true'" Include="StyleCop.Analyzers" Version="1.2.0-beta.435">
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Condition="$(EndjinDisableCodeAnalysis) != 'true'" Include="Roslynator.Analyzers" Version="4.1.0">
+        <PackageReference Condition="$(EndjinDisableCodeAnalysis) != 'true'" Include="Roslynator.Analyzers" Version="4.1.1">
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
     </ItemGroup>
