@@ -47,7 +47,10 @@ jobs:
   - task: NuGetCommand@2
     inputs:
       command: 'pack'
-      packagesToPack: 'src/**/*.nuspec'
+      # Note: this MUST NOT be a wildcard matching all .nuspec files across the entire solution,
+      # because if we do that, we end up publishing the two test projects (SingleFramework and
+      # MultiFramework).
+      packagesToPack: 'src/Endjin.RecommendedPractices.NuGet/**/*.nuspec;src/Endjin.RecommendedPractices.NuGet.GitHub/**/*.nuspec'
       versioningScheme: 'byEnvVar'
       versionEnvVar: 'GitVersion.SemVer'
 
