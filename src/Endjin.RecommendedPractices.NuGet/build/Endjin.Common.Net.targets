@@ -60,18 +60,4 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
-
-    <ItemGroup>
-        <!--
-            Reference to preview version because there hasn't been a non-preview release in an age,
-            the language support is a long way behind on the last non-preview version, and the
-            package author says to use the preview versions.
-        -->
-        <PackageReference Condition="$(EndjinDisableCodeAnalysis) != 'true'" Include="StyleCop.Analyzers" Version="1.2.0-beta.435">
-            <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
-        <PackageReference Condition="$(EndjinDisableCodeAnalysis) != 'true'" Include="Roslynator.Analyzers" Version="4.3.0">
-            <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
-    </ItemGroup>
 </Project>
