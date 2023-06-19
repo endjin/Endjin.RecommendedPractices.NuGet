@@ -23,6 +23,13 @@
             it doesn't have any impact on project output.
             -->
             <dependency id="Microsoft.Build.Tasks.Git" version="1.1.1" />
+            <!--
+            Reference to preview version because there hasn't been a non-preview release in an age,
+            the language support is a long way behind on the last non-preview version, and the
+            package author says to use the preview versions.
+            -->
+            <dependency id="StyleCop.Analyzers" version="1.2.0-beta.435" />
+            <dependency id="Roslynator.Analyzers" version="4.3.0" />
         </dependencies>
     </metadata>
 
