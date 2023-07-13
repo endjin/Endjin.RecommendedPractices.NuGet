@@ -23,6 +23,58 @@
             it doesn't have any impact on project output.
             -->
             <dependency id="Microsoft.Build.Tasks.Git" version="1.1.1" />
+
+            <!--
+                One of the main goals of Endjin.RecommendedPractices is to make sure all our
+                projects use the same analyzers. (Specifically, StyleCop.Analyzers and Roslynator.Analyzers.)
+                Historically, we have achieved this in a slightly roundabout route, because these are
+                development dependencies, which are not transitive. (The entire point of a development
+                dependency is that it is not transitive.) Analyzer packages are always non-transitive, because
+                you only want them at build time - you don't want the thing you build to have a dependency on
+                them. E.g., just because Corvus.Storage uses StyleCop.Analyzers that doesn't mean we want to
+                force anyone using Corvus.Storage to use StyleCop.Analyzers.
+                But this Endjin.RecommendedPractices package is unusual: we actually do want to force
+                anyone using Endjin.RecommendedPractices to use StyleCop.Analyzers. But it's not transitive:
+                we want it to stop after one level. For example, if Corvus.Storage uses Endjin.RecommendedPractices
+                then it should automatically (as a result of using Endjin.RecommendedPractices) end up using
+                StyleCop.Analyzers, but that should still be a development dependency for Corvus.Storage.
+                So although depending on Endjin.RecommendedPractices means Corvus.Storage automatically depends
+                on StyleCop.Analyzers, that won't cause all components depending on Corvus.Storage also to
+                depend automatically on StyleCop.Analyzers. (They can if they want to of course. It's just that
+                it won't happen by virtue of an indirect dependency on Endjin.RecommendedPractices via Corvus.Storage.)
+
+                As far as we could tell, this was not supported by NuGet, so we took the slightly unusual
+                step of meddling with the PackageReference item group in one of the .targets files in this
+                package's build folder. The problem, though, is that this is something you are explicitly told
+                not to do:
+
+                https://learn.microsoft.com/en-us/nuget/concepts/msbuild-props-and-targets#guidance-for-the-content-of-msbuild-props-and-targets
+
+                @MikeEvansLarah raised this with @idg10, and believes it should be possible based on:
+
+                https://github.com/NuGet/Home/wiki/DevelopmentDependency-support-for-PackageReference
+
+                @idg10 is not convinced, because this looks like a description of the one-level-deep behaviour
+                you get when you directly reference a development-time package. He thinks that page is describing
+                the process by which a project with a direct dependency on StyleCop.Analyzers will be able to use
+                the analyzers in that package without forcing StyleCop.Analyzers on any of its dependents.
+                It does not appear to address the two-level-deep behaviour we want, in which Endjin.RecommendedPractices
+                could force a dependent such as Corvus.Storage to use StyleCop.Analyzers without also forcing
+                code using Corvus.Storage also to depend on StyleCop.Analyzers.
+
+                However, @idg10 would really like to be wrong about this, because it would be far preferable
+                for Endjin.RecommendedPractices to be able to declare the dependencies it imposes on other projects
+                explicitly. The way we do this today really confuses dependabot and the Visual Studio NuGet tooling,
+                with the effect that anyone who doesn't understand what's happening here can be led into clicking
+                a button that offers to update their StyleCop.Analyzers and/or Roslynator.Analyzers dependencies, but
+                this will then mess up that project.
+
+                So we're trying this in the hope that it might actually work.
+            -->
+
+            <dependency id="StyleCop.Analyzers" version="1.2.0-beta.507" />
+            <dependency id="Roslynator.Analyzers" version="4.3.0" />
+
         </dependencies>
     </metadata>
 
