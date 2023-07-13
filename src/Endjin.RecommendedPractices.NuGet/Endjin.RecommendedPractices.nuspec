@@ -72,8 +72,8 @@
                 So we're trying this in the hope that it might actually work.
             -->
 
-            <dependency id="StyleCop.Analyzers" version="1.2.0-beta.507" />
-            <dependency id="Roslynator.Analyzers" version="4.3.0" />
+            <dependency id="StyleCop.Analyzers" version="1.2.0-beta.507" include="none" />
+            <dependency id="Roslynator.Analyzers" version="4.3.0" include="none" />
 
         </dependencies>
     </metadata>
