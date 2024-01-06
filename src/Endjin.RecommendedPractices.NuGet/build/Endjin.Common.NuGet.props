@@ -21,7 +21,6 @@
       technical requirement to specify the license in projects that don't produce packages.)
     -->
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
@@ -31,7 +30,7 @@
     <ContinuousIntegrationBuild Condition="'$(TF_BUILD)' == 'true'">True</ContinuousIntegrationBuild>
   </PropertyGroup>
 
-    <!--
+  <!--
       PackageIconUrl has been deprecated by NuGet, so we need to use <PackageIcon>.
 
       The Endjin.RecommendedPractices NuGet package presumes that the icon lives in
@@ -62,7 +61,7 @@
       solution is necessary for Solution Explorer to notice the change.) But this way
       it's less obtrusive - instead of getting a big red X, you just don't see the
       PackageIcon.png to begin with.
-    -->
+  -->
 
   <PropertyGroup Condition="($(IsPackable) != 'false') and ($(EndjinDisableDefaultPackageIconInclusion) != 'true') and (Exists('$(SolutionDir)PackageIcon.png'))">
     <PackageIcon>PackageIcon.png</PackageIcon>
