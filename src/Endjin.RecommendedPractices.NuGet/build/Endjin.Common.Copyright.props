@@ -5,6 +5,6 @@
 -->
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <Copyright Condition=" '$(Copyright)' == '' ">Copyright (c) Endjin Limited 2023. All rights reserved.</Copyright>
+    <Copyright Condition=" '$(Copyright)' == '' ">Copyright (c) Endjin Limited 2024. All rights reserved.</Copyright>
   </PropertyGroup>
 </Project>
