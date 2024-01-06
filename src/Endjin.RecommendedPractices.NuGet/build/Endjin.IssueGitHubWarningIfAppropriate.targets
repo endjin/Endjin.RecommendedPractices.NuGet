@@ -41,7 +41,6 @@
         </PropertyGroup>
 
         <Microsoft.Build.Tasks.Git.LocateRepository Condition="'$(_EndjinGitFolderFound)' == 'true'" Path="$(MSBuildProjectDirectory)" RemoteName="$(GitRepositoryRemoteName)" ConfigurationScope="$(GitRepositoryConfigurationScope)">
-
             <Output TaskParameter="WorkingDirectory" PropertyName="_EndjinWorkingDirectory" />
             <Output TaskParameter="RepositoryId" PropertyName="_EndjinGitRepositoryId" />
             <Output TaskParameter="Url" PropertyName="_EndjinUrl" />
@@ -66,7 +65,6 @@
     </Target>
 
     <Target Name="_EndjinIssueGitHubWarningIfAppropriate" DependsOnTargets="EndjinDetectGitHub">
-
         <Error
             Condition=" ('$(EndjinProjectIsInGitHubRepo)' == 'true') And ('$(_EndjinGitHubPackageImported)' != 'true') And ($(EndjinDisableGitHubSourceLinkWarning) != 'true') "
             Text="The Endjin.RecommendedPractices NuGet package stopped automatically enabling GitHub Source Link in V2. You appear to be using GitHub, so if you still want Source Link, change the reference to Endjin.RecommendedPractices.GitHub. Set the EndjinDisableGitHubSourceLinkWarning build property to true in your csproj file if you do not want Source Link."
