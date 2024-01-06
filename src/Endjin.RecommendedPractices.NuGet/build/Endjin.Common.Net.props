@@ -52,7 +52,6 @@
         With .NET Core 3 or later, the latest language is the default, but for older versions you have to ask for it
     -->
     <LangVersion>latest</LangVersion>
-
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
@@ -60,7 +59,6 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <TreatSpecificWarningsAsErrors />
     <WarningsAsErrors />
-
   </PropertyGroup>
 
   <PropertyGroup>
