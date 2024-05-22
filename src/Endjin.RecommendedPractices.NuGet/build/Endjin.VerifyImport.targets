@@ -10,9 +10,22 @@
 
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="_EndjinCheckImport">
     <Target Name="_EndjinCheckImport">
+        <!--
+            To workaround an issue when using this package with GitHub Dependabot, we need to ensure that this forced error
+            condition is not triggered when Dependabot is checking for updated packages.  As part of this process it generates
+            a temporary project file which includes all the package references, but is missing the additional metadata
+            needed as part of this package.  As a result this triggers this error condition.
+
+            We have limited options for detecting when running inside the dependabot-updater process, so we are currently
+            relying on detecting the filename of the temporary project it creates - 'Project.csproj'.  This is obviously far
+            from ideal, but should be adequate for our use cases since it is very unlikely we would have a solution we care
+            about containing a project of this name.
+
+            Ref: https://github.com/dependabot/dependabot-core/blob/098e683eca6525c1bc01ca5a679dd06fa6bd0d21/nuget/helpers/lib/NuGetUpdater/NuGetUpdater.Core/Utilities/MSBuildHelper.cs#L459
+        -->
         <Error
-            Condition=" ('$(_EndjinProjectPropsImported)' != 'true') And ($(EndjinSuppressPropsImportError) != 'true') "
-            Text="When using the Endjin.RecommendedPractices NuGet package, you must add &lt;Import Project=&quot;%24(EndjinProjectPropsPath)&quot; Condition=&quot;%24(EndjinProjectPropsPath) != ''&quot; /&gt; at the top of your csproj file"
+            Condition=" ('$(_EndjinProjectPropsImported)' != 'true') And ($(EndjinSuppressPropsImportError) != 'true') And ('$(MSBuildProjectFile)' != 'Project.csproj') "
+            Text="When using the Endjin.RecommendedPractices NuGet package, you must add &lt;Import Project=&quot;%24(EndjinProjectPropsPath)&quot; Condition=&quot;%24(EndjinProjectPropsPath) != ''&quot; /&gt; at the top of your csproj file.']"
         />
     </Target>
 </Project>
