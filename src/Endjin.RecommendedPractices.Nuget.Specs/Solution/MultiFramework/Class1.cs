@@ -2,12 +2,11 @@
 // Copyright (c) Endjin Limited. All rights reserved.
 // </copyright>
 
-namespace MultiFramework
+namespace MultiFramework;
+
+/// <summary>
+/// Class1.
+/// </summary>
+public class Class1
 {
-    /// <summary>
-    /// Class1.
-    /// </summary>
-    public class Class1
-    {
-    }
 }
