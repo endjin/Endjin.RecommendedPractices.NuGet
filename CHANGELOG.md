@@ -25,6 +25,9 @@ These changes will be released as version 3.0.0. See also the [v3 release notes]
 - Updated the `Roslynator.Analyzers` reference from 4.13.1 to 5.0.1.
 - Updated the default `Copyright` year to 2026.
 - **Breaking:** the `packages.lock.json` check now applies to `WinExe` projects (such as WPF and Windows Forms apps) as well as `Exe` projects. A `WinExe` project without lock file settings now fails with the same error. Add the settings the error shows, or set `EndjinDisableAutoPackagesLock` to `true`.
+- **Breaking:** builds on GitHub Actions (where `GITHUB_ACTIONS` is `true`) are now CI builds: `ContinuousIntegrationBuild` is set to `true`, as it already was on Azure Pipelines. A value the project sets itself is kept. As a result, the `packages.lock.json` check now also requires `RestoreLockedMode` in GitHub Actions builds of projects that need lock files.
+- A project in a GitHub repository that references `Endjin.RecommendedPractices` instead of `Endjin.RecommendedPractices.GitHub` now gets a warning, not an error. The message no longer says that the GitHub package is needed for Source Link: Source Link comes from the .NET SDK with either package. The GitHub package adds the repository type, project URL and release notes. `EndjinDisableGitHubSourceLinkWarning` still turns the warning off.
+- Both packages now declare their license (Apache-2.0), project URL, repository and release notes.
 
 ### Removed
 
@@ -44,6 +47,7 @@ These changes will be released as version 3.0.0. See also the [v3 release notes]
 - `EndjinProjectIsInGitHubRepo` is now `false` for projects that are not in a GitHub repository. Previously it was left empty.
 - `EndjinGitHubOrg` is now set for `ssh://` remotes whose user is not `git`.
 - Removed stray characters (`']`) from the end of the error shown when a project does not import `Endjin.Project.props`.
+- The `object_collection_array_initializers` option of `csharp_new_line_before_open_brace` in the default `.editorconfig` was misspelled, so it was ignored. This only affects solutions that get a new `.editorconfig` from the package; an existing copy isn't updated.
 
 ## [2.1.18] - 2025-03-13
 

@@ -27,8 +27,15 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <Deterministic>true</Deterministic>
-    <!-- https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml#system-variables -->
-    <ContinuousIntegrationBuild Condition="'$(TF_BUILD)' == 'true'">True</ContinuousIntegrationBuild>
+    <!--
+      ContinuousIntegrationBuild makes the build deterministic for CI (for example, source paths in
+      PDBs are normalized so Source Link works), and Endjin.AutoPackagesLock.targets uses it to
+      require RestoreLockedMode. The .NET SDK doesn't set it, so we do when we recognize a CI server:
+      TF_BUILD is set by Azure Pipelines, and GITHUB_ACTIONS by GitHub Actions.
+      https://learn.microsoft.com/en-us/azure/devops/pipelines/build/variables#system-variables
+      https://docs.github.com/en/actions/reference/workflows-and-actions/variables#default-environment-variables
+    -->
+    <ContinuousIntegrationBuild Condition="'$(ContinuousIntegrationBuild)' == '' And ('$(TF_BUILD)' == 'true' Or '$(GITHUB_ACTIONS)' == 'true')">true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
     <!--

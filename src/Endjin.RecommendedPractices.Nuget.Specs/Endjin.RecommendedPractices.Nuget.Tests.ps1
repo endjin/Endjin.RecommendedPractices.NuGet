@@ -226,9 +226,19 @@ internal static class Program
 
     # Runs 'dotnet <arguments>' in a scenario folder (restoring from the locally built packages) and
     # returns its exit code and output, without failing on a non-zero exit code.
+    #
+    # Scenarios behave the same locally and on a CI server: the variables the package uses to
+    # detect a CI server are cleared, unless the scenario sets them through -Environment.
     function Invoke-Scenario {
-        param ([string] $Dir, [string[]] $Arguments)
+        param ([string] $Dir, [string[]] $Arguments, [hashtable] $Environment = @{})
 
+        $variables = @{ TF_BUILD = $null; GITHUB_ACTIONS = $null }
+        foreach ($name in $Environment.Keys) { $variables[$name] = $Environment[$name] }
+        $saved = @{}
+        foreach ($name in $variables.Keys) {
+            $saved[$name] = [Environment]::GetEnvironmentVariable($name)
+            [Environment]::SetEnvironmentVariable($name, $variables[$name])
+        }
         Push-Location $Dir
         try {
             $output = & dotnet @Arguments -nologo -tl:off "-p:RestoreConfigFile=$nugetConfig" 2>&1 | Out-String
@@ -236,6 +246,9 @@ internal static class Program
         }
         finally {
             Pop-Location
+            foreach ($name in $saved.Keys) {
+                [Environment]::SetEnvironmentVariable($name, $saved[$name])
+            }
         }
     }
 }
@@ -374,6 +387,22 @@ Describe 'Package metadata of a consuming project' {
         $names = Get-PackageEntryNames (Join-Path $packageOutputDir "MultiFramework.0.0.1-local.nupkg")
         $names | Should -Contain 'lib/net10.0/MultiFramework.dll'
         $names | Should -Contain 'lib/netstandard2.0/MultiFramework.dll'
+    }
+
+    It 'marks the build as a CI build when <_> is true' -ForEach @('TF_BUILD', 'GITHUB_ACTIONS') {
+        $dir = New-Scenario -Name "ci-$_"
+        (Invoke-Scenario $dir @('restore', 'Proj/Proj.csproj')).ExitCode | Should -Be 0
+        $result = Invoke-Scenario $dir @('msbuild', 'Proj/Proj.csproj', '-getProperty:ContinuousIntegrationBuild') -Environment @{ $_ = 'true' }
+        $result.ExitCode | Should -Be 0 -Because $result.Output
+        $result.Output.Trim() | Should -Be 'true'
+    }
+
+    It 'does not mark a local build as a CI build' {
+        $dir = New-Scenario -Name 'ci-none'
+        (Invoke-Scenario $dir @('restore', 'Proj/Proj.csproj')).ExitCode | Should -Be 0
+        $result = Invoke-Scenario $dir @('msbuild', 'Proj/Proj.csproj', '-getProperty:ContinuousIntegrationBuild')
+        $result.ExitCode | Should -Be 0 -Because $result.Output
+        $result.Output.Trim() | Should -BeNullOrEmpty
     }
 
     It 'keeps a copyright notice that the project sets' {
@@ -563,6 +592,13 @@ Describe 'packages.lock.json checks' {
         $result.ExitCode | Should -Be 0 -Because $result.Output
     }
 
+    It 'fails the CI build of an Exe project whose lock file is not used in locked mode' {
+        $dir = New-Scenario -Name 'lock-exe-ci-not-locked' -ProjectXml (New-ProjectXml -Properties '<OutputType>Exe</OutputType><RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>') -Files @{ 'Proj/Program.cs' = $houseStyleProgram }
+        $result = Invoke-Scenario $dir @('build', 'Proj/Proj.csproj') -Environment @{ GITHUB_ACTIONS = 'true' }
+        $result.ExitCode | Should -Not -Be 0
+        $result.Output | Should -Match 'Properties for package lock file generation are not set correctly'
+    }
+
     It 'does not require a lock file for a class library' {
         $dir = New-Scenario -Name 'lock-library'
         $result = Invoke-Scenario $dir @('build', 'Proj/Proj.csproj')
@@ -572,17 +608,26 @@ Describe 'packages.lock.json checks' {
 
 Describe 'GitHub support' {
 
-    It 'fails the build of a GitHub-hosted project that references Endjin.RecommendedPractices instead of the GitHub package' {
+    It 'warns, without failing the build, when a GitHub-hosted project references Endjin.RecommendedPractices instead of the GitHub package' {
         $dir = New-Scenario -Name 'github-without-github-package' -ProjectXml (New-ProjectXml -Package 'Endjin.RecommendedPractices')
         $result = Invoke-Scenario $dir @('build', 'Proj/Proj.csproj')
-        $result.ExitCode | Should -Not -Be 0
-        $result.Output | Should -Match 'change the reference to Endjin\.RecommendedPractices\.GitHub'
+        $result.ExitCode | Should -Be 0 -Because $result.Output
+        $result.Output | Should -Match 'warning : This project is in a GitHub repository, but it references Endjin\.RecommendedPractices instead of Endjin\.RecommendedPractices\.GitHub'
     }
 
-    It 'builds that project when EndjinDisableGitHubSourceLinkWarning is true' {
+    It 'gives Source Link information to a GitHub-hosted project that references Endjin.RecommendedPractices' {
+        # Source Link comes from the .NET SDK, so it doesn't depend on the GitHub package.
+        $dir = New-Scenario -Name 'github-without-github-package-sourcelink' -ProjectXml (New-ProjectXml -Package 'Endjin.RecommendedPractices' -Properties '<EndjinDisableGitHubSourceLinkWarning>true</EndjinDisableGitHubSourceLinkWarning>')
+        $result = Invoke-Scenario $dir @('pack', 'Proj/Proj.csproj', '-o', 'out')
+        $result.ExitCode | Should -Be 0 -Because $result.Output
+        Get-PackageEntryText (Join-Path $dir 'out/Proj.1.0.0.nupkg') 'Proj.nuspec' | Should -Match '<repository type="git" url="https://github\.com/[^"]+"[^>]* commit="[0-9a-f]{40}"'
+    }
+
+    It 'does not warn when EndjinDisableGitHubSourceLinkWarning is true' {
         $dir = New-Scenario -Name 'github-without-github-package-opt-out' -ProjectXml (New-ProjectXml -Package 'Endjin.RecommendedPractices' -Properties '<EndjinDisableGitHubSourceLinkWarning>true</EndjinDisableGitHubSourceLinkWarning>')
         $result = Invoke-Scenario $dir @('build', 'Proj/Proj.csproj')
         $result.ExitCode | Should -Be 0 -Because $result.Output
+        $result.Output | Should -Not -Match 'This project is in a GitHub repository'
     }
 
     It 'keeps repository and project URLs and release notes that the project sets' {
