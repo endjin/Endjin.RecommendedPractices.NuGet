@@ -362,7 +362,9 @@ Describe 'Package metadata of a consuming project' {
     }
 
     It 'records the source repository and commit' {
-        $nuspec | Should -Match '<repository type="git" url="https://github\.com/[^"]+\.git"[^>]* commit="[0-9a-f]{40}"'
+        # The URL comes from the Git remote, so whether it ends in .git depends on how the repository
+        # was cloned (actions/checkout's remote doesn't).
+        $nuspec | Should -Match '<repository type="git" url="https://github\.com/[^"]+"[^>]* commit="[0-9a-f]{40}"'
     }
 
     It 'puts Source Link information in the symbols package' {
