@@ -478,6 +478,20 @@ Describe 'Project conventions' {
         $result.Output | Should -Match 'error CS0168'
     }
 
+    It 'keeps TreatWarningsAsErrors <Value> from Directory.Build.props in a Release build (<How>)' -ForEach @(
+        @{ Value = 'false'; How = 'passed in'; ProjectProperties = ''; Configuration = 'Release' }
+        @{ Value = 'False'; How = 'passed in'; ProjectProperties = ''; Configuration = 'Release' }
+        @{ Value = 'False'; How = 'chosen in the project file'; ProjectProperties = '<Configuration>Release</Configuration>'; Configuration = '' }
+    ) {
+        $code = $houseStyleClass.Replace('return DateTimeOffset.UtcNow;', "int unused;`r`n        return DateTimeOffset.UtcNow;")
+        $directoryBuildProps = "<Project><PropertyGroup><TreatWarningsAsErrors>$Value</TreatWarningsAsErrors></PropertyGroup></Project>"
+        $name = "warnings-dbp-$Value-$($How.Replace(' ', '-'))"
+        $dir = New-Scenario -Name $name -ProjectXml (New-ProjectXml -Properties $ProjectProperties) -Files @{ 'Proj/Widget.cs' = $code; 'Directory.Build.props' = $directoryBuildProps }
+        $result = Invoke-Scenario $dir @('build', 'Proj/Proj.csproj') -Configuration $Configuration
+        $result.ExitCode | Should -Be 0 -Because $result.Output
+        $result.Output | Should -Match 'warning CS0168'
+    }
+
     It 'keeps TreatWarningsAsErrors <_> when the project file sets it and selects Release' -ForEach @('false', 'False') {
         $code = $houseStyleClass.Replace('return DateTimeOffset.UtcNow;', "int unused;`r`n        return DateTimeOffset.UtcNow;")
         $properties = "<Configuration>Release</Configuration><TreatWarningsAsErrors>$_</TreatWarningsAsErrors>"
