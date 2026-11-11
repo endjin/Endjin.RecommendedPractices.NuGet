@@ -25,10 +25,14 @@
             Text="Endjin.RecommendedPractices.GitHub relies on the Source Link support built into the .NET SDK, but Source Link is not available in this build. Remove the SuppressImplicitGitSourceLink setting, or add a PackageReference to Microsoft.SourceLink.GitHub."
             />
 
+        <!--
+            These are defaults: a value the project has already set (e.g. in its csproj) wins. An
+            empty element, such as <PackageReleaseNotes></PackageReleaseNotes>, counts as not set.
+        -->
         <PropertyGroup Condition="'$(EndjinProjectIsInGitHubRepo)' == 'true'">
-            <RepositoryUrl>https://github.com/$(EndjinGitHubOrg)/$(EndjinGitHubProject).git</RepositoryUrl>
-            <PackageProjectUrl>https://github.com/$(EndjinGitHubOrg)/$(EndjinGitHubProject)</PackageProjectUrl>
-            <PackageReleaseNotes>See https://github.com/$(EndjinGitHubOrg)/$(EndjinGitHubProject)/releases/</PackageReleaseNotes>
+            <RepositoryUrl Condition="'$(RepositoryUrl)' == ''">https://github.com/$(EndjinGitHubOrg)/$(EndjinGitHubProject).git</RepositoryUrl>
+            <PackageProjectUrl Condition="'$(PackageProjectUrl)' == ''">https://github.com/$(EndjinGitHubOrg)/$(EndjinGitHubProject)</PackageProjectUrl>
+            <PackageReleaseNotes Condition="'$(PackageReleaseNotes)' == ''">See https://github.com/$(EndjinGitHubOrg)/$(EndjinGitHubProject)/releases/</PackageReleaseNotes>
         </PropertyGroup>
     </Target>
 
