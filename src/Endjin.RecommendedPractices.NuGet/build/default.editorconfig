@@ -7,6 +7,10 @@
 
 # Code style rules for enforcing the endjin house style
 # See: https://docs.microsoft.com/en-us/visualstudio/ide/editorconfig-code-style-settings-reference
+#
+# The package also applies the C# settings below through a global analyzer config
+# (Endjin.CodeAnalysis.globalconfig in the package), so that they apply from the very first build.
+# Settings in this file override that, so you can change any of them here.
 
 # XML project files
 [*.{csproj,vbproj,vcxproj,vcxproj.filters,proj,projitems,shproj}]

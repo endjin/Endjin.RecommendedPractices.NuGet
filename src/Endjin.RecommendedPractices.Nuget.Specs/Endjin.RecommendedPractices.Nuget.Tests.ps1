@@ -121,10 +121,44 @@ BeforeAll {
 
 Describe 'Endjin.RecommendedPractices package' {
 
-    It 'includes the default .editorconfig' {
+    It 'includes the default .editorconfig and the global analyzer config' {
         $names = Get-PackageEntryNames (Join-Path $packageOutputDir "Endjin.RecommendedPractices.0.0.1-local.nupkg")
         $names | Should -Contain 'build/default.editorconfig'
         $names | Should -Contain 'buildMultiTargeting/default.editorconfig'
+        $names | Should -Contain 'build/Endjin.CodeAnalysis.globalconfig'
+        $names | Should -Contain 'buildMultiTargeting/Endjin.CodeAnalysis.globalconfig'
+    }
+
+    It 'has the same C# settings in its global analyzer config and its default .editorconfig' {
+        # Endjin.CodeAnalysis.globalconfig repeats the [*.{cs,csx}] section of default.editorconfig
+        # (so the settings apply from the first build); the two must not drift apart.
+        function Read-Settings([string[]] $lines) {
+            $settings = [ordered]@{}
+            foreach ($line in $lines) {
+                if ($line -match '^\s*([^#;\[\s][^=]*?)\s*=\s*(.*?)\s*$') { $settings[$Matches[1]] = $Matches[2] }
+            }
+            $settings
+        }
+
+        $buildDir = Join-Path $here "../Endjin.RecommendedPractices.NuGet/build"
+        $globalConfig = Read-Settings (Get-Content (Join-Path $buildDir "Endjin.CodeAnalysis.globalconfig"))
+        $globalConfig.Remove('is_global')
+        $globalConfig.Remove('global_level')
+
+        # Only the C# section: from its header to the next section header (or the end of the file).
+        $editorConfigLines = Get-Content (Join-Path $buildDir "default.editorconfig")
+        $start = [array]::IndexOf($editorConfigLines, '[*.{cs,csx}]')
+        $start | Should -BeGreaterThan -1 -Because 'default.editorconfig should have a [*.{cs,csx}] section'
+        $csharpSection = $editorConfigLines | Select-Object -Skip ($start + 1) | ForEach-Object -Begin { $inSection = $true } -Process {
+            if ($_ -match '^\s*\[') { $inSection = $false }
+            if ($inSection) { $_ }
+        }
+        $editorConfig = Read-Settings $csharpSection
+
+        ($globalConfig.Keys | Sort-Object) | Should -Be ($editorConfig.Keys | Sort-Object)
+        foreach ($key in $globalConfig.Keys) {
+            $globalConfig[$key] | Should -Be $editorConfig[$key] -Because "'$key' should have the same value in both files"
+        }
     }
 
     It 'depends on the StyleCop and Roslynator analyzers' {

@@ -6,17 +6,20 @@
         for a NuGet package to supply solution-level content so we just check to see if the
         relevant files exist, and if not, create them.
 
-        Note that this typically results in a warning directly after adding this NuGet package
-        to a project for the first time in any solution, because the files won't get copied
-        until you first build, but VS runs analyzers immediately to provide instant feedback.
-        Once you've built, this warning shouldn't reappear.
+        The files are only copied during a build, and the .NET SDK decides which of them apply to
+        a compilation before that. So until they exist, Endjin.Common.Net.props supplies the same
+        settings from the package itself: its copy of stylecop.json, and the C# settings of the
+        default .editorconfig as a global analyzer config (Endjin.CodeAnalysis.globalconfig).
 
-        The automatic copying of these files can be disabled with:
+        The automatic copying of stylecop.json can be disabled with:
 
         <EndjinDisableCodeAnalysis>true</EndjinDisableCodeAnalysis>
 
         which also removes the StyleCop.Analyzers and Roslynator.Analyzers analyzers from
-        compilation (see _EndjinRemoveCodeAnalysisAnalyzers below).
+        compilation (see _EndjinRemoveCodeAnalysisAnalyzers below). The .editorconfig (and the
+        global analyzer config) can be turned off with:
+
+        <EndjinDisableCreateEditorConfig>true</EndjinDisableCreateEditorConfig>
     -->
     <Target Name="_EndjinEnsureCodeAnalysisRuleSet" AfterTargets="BeforeBuild" BeforeTargets="CoreBuild">
         <Copy Condition="($(EndjinDisableCodeAnalysis) != 'true') and (!Exists('$(SolutionDir)stylecop.json'))" SourceFiles="$(MSBuildThisFileDirectory)stylecop.json" DestinationFiles="$(SolutionDir)stylecop.json" />

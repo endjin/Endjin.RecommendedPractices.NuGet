@@ -83,4 +83,16 @@
     <AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json" Link="stylecop.json" />
   </ItemGroup>
 
+  <!--
+    The same first-build problem applies to .editorconfig, and a fallback copy can't fix it: an
+    .editorconfig only applies to files in or below its own folder. So the C# settings from the
+    default .editorconfig are also supplied as a global analyzer config, which applies to every
+    file in the compilation. Any .editorconfig (including the copied one) overrides it, so it only
+    makes a difference until the solution has its own .editorconfig. See the file for details.
+    Setting EndjinDisableCreateEditorConfig to true turns off both.
+  -->
+  <ItemGroup Condition="$(EndjinDisableCreateEditorConfig) != 'true'">
+    <GlobalAnalyzerConfigFiles Include="$(MSBuildThisFileDirectory)Endjin.CodeAnalysis.globalconfig" />
+  </ItemGroup>
+
 </Project>
