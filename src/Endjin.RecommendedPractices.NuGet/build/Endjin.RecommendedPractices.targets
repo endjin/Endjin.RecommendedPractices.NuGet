@@ -1,5 +1,7 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+    <!-- Imported first so its InitialTargets runs before anything else of ours. -->
+    <Import Project="$(MSBuildThisFileDirectory)Endjin.VerifySdkVersion.targets" />
     <Import Project="$(MSBuildThisFileDirectory)Endjin.VerifyImport.targets" />
     <Import Project="$(MSBuildThisFileDirectory)Endjin.Common.Net.targets" />
     <Import Project="$(MSBuildThisFileDirectory)Endjin.IssueGitHubWarningIfAppropriate.targets" />

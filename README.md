@@ -2,6 +2,8 @@
 
 A NuGet package that configures .NET projects for endjin's recommended engineering practices
 
+**Requirements:** the .NET 10 SDK or later. .NET 10 is the earliest supported version of .NET, and the package stops the build with an error on older SDKs. (You can still target older frameworks, such as `netstandard2.0`, from a supported SDK.)
+
 When you add a reference to this package via NuGet, it does the following:
 
 * sets a default (c) string (note: if you're not endjin, you will probably want to change this)

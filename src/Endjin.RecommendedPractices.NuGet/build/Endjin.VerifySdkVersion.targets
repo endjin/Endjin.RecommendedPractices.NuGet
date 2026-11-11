@@ -1,0 +1,29 @@
+<!--
+    Endjin.RecommendedPractices supports only the .NET SDK versions whose runtime is in support.
+    The earliest of these is currently .NET 10, so we fail the build on older SDKs rather than
+    let it carry on with behaviour we no longer test (for example, the built-in Source Link
+    support that Endjin.RecommendedPractices.GitHub relies on).
+
+    NETCoreSdkVersion is set by the .NET SDK. It is empty for builds that don't use the SDK, and
+    we skip the check in that case. MSBuild's version functions ignore prerelease suffixes, so
+    previews of a supported SDK pass (e.g. 11.0.100-rc.1 counts as 11.0.100).
+
+    If you have to build with an older SDK for now, you can turn the error off with:
+
+    <EndjinSuppressSdkVersionError>true</EndjinSuppressSdkVersionError>
+-->
+
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="_EndjinCheckSdkVersion">
+
+    <PropertyGroup>
+        <_EndjinMinimumSdkVersion>10.0</_EndjinMinimumSdkVersion>
+    </PropertyGroup>
+
+    <Target Name="_EndjinCheckSdkVersion">
+        <Error
+            Condition=" '$(NETCoreSdkVersion)' != '' And $([MSBuild]::VersionLessThan('$(NETCoreSdkVersion)', '$(_EndjinMinimumSdkVersion)')) And '$(EndjinSuppressSdkVersionError)' != 'true' "
+            Text="The Endjin.RecommendedPractices NuGet package requires the .NET SDK $(_EndjinMinimumSdkVersion) or later, but this build is using the .NET SDK $(NETCoreSdkVersion). Install a supported .NET SDK (and update global.json if the repository has one). To build with this SDK anyway, set the EndjinSuppressSdkVersionError build property to true."
+            />
+    </Target>
+
+</Project>

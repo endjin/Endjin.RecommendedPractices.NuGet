@@ -15,13 +15,14 @@
     -->
     <Target Name="_EndjinSetGitHubProperties" BeforeTargets="Compile" DependsOnTargets="EndjinDetectGitHub">
         <!--
-            Source Link for GitHub comes from the .NET SDK (8.0+), not from a package dependency.
-            MicrosoftBuildTasksGitAssemblyFile is set by the SDK's Source Link support, or by a
-            Microsoft.SourceLink.* package if the project references one.
+            Source Link for GitHub comes from the .NET SDK's built-in support, not from a package
+            dependency. MicrosoftBuildTasksGitAssemblyFile is set by the SDK's Source Link support,
+            or by a Microsoft.SourceLink.* package if the project references one. It is empty when
+            the project sets SuppressImplicitGitSourceLink to true without referencing a package.
         -->
         <Warning
             Condition="'$(MicrosoftBuildTasksGitAssemblyFile)' == ''"
-            Text="Endjin.RecommendedPractices.GitHub relies on the Source Link support built into the .NET SDK (8.0 or later), but Source Link is not available in this build. Use the .NET 8 SDK or later, or remove SuppressImplicitGitSourceLink, or add a PackageReference to Microsoft.SourceLink.GitHub."
+            Text="Endjin.RecommendedPractices.GitHub relies on the Source Link support built into the .NET SDK, but Source Link is not available in this build. Remove the SuppressImplicitGitSourceLink setting, or add a PackageReference to Microsoft.SourceLink.GitHub."
             />
 
         <PropertyGroup Condition="'$(EndjinProjectIsInGitHubRepo)' == 'true'">

@@ -12,12 +12,12 @@
 
         <developmentDependency>true</developmentDependency>
         <!--
-        No dependency on Microsoft.SourceLink.GitHub: the .NET SDK (8.0 onwards) has Source Link
-        for GitHub built in, matched to the SDK version in use. Referencing the package would
-        switch that off and pin every consumer to the package's MSBuild requirements (11.x
-        needs the .NET 10 SDK or later). Endjin.Common.GitHub.targets warns if Source Link
-        is unavailable. Projects that need a specific Source Link version can still add
-        their own PackageReference to Microsoft.SourceLink.GitHub.
+        No dependency on Microsoft.SourceLink.GitHub: the .NET SDK has Source Link for GitHub
+        built in, matched to the SDK version in use. Referencing the package would switch that
+        off and tie every consumer to the MSBuild version the package was built for.
+        Endjin.Common.GitHub.targets warns if Source Link is unavailable. Projects that need a
+        specific Source Link version can still add their own PackageReference to
+        Microsoft.SourceLink.GitHub.
         -->
         <dependencies>
             <dependency id="Endjin.RecommendedPractices" version="$version$" />

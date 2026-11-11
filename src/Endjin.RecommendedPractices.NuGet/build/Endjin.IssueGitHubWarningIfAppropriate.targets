@@ -43,10 +43,10 @@
         <!--
             LocateRepository comes from Microsoft.Build.Tasks.Git, which we don't reference as a
             package (see the nuspec). It is registered by the .NET SDK's built-in Source Link
-            support (SDK 8.0+), or by a Microsoft.SourceLink.* package if the project references
-            one. Either way, MicrosoftBuildTasksGitAssemblyFile is set when the task is available.
-            If it isn't (older SDK, or SuppressImplicitGitSourceLink with no package), we skip
-            detection rather than fail the build.
+            support, or by a Microsoft.SourceLink.* package if the project references one.
+            Either way, MicrosoftBuildTasksGitAssemblyFile is set when the task is available.
+            If it isn't (SuppressImplicitGitSourceLink set with no package, or a build that
+            doesn't use the .NET SDK), we skip detection rather than fail the build.
         -->
         <Microsoft.Build.Tasks.Git.LocateRepository Condition="'$(_EndjinGitFolderFound)' == 'true' And '$(MicrosoftBuildTasksGitAssemblyFile)' != ''" Path="$(MSBuildProjectDirectory)" RemoteName="$(GitRepositoryRemoteName)" ConfigurationScope="$(GitRepositoryConfigurationScope)">
 
