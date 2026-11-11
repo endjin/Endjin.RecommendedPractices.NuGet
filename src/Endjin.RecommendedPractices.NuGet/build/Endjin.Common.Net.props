@@ -67,21 +67,19 @@
     TreatWarningsAsErrors to true here, so that anything derived from it early in the build sees
     the final value.
 
-    Otherwise we set it to "False", with a capital F. MSBuild treats that as false like any other
-    spelling, and it stops the .NET SDK's own default (false, which Microsoft.NET.Sdk.props sets
-    after this file) from applying. A project can still choose its configuration in its own file,
-    after this. So Endjin.Common.Net.targets, which runs once the final configuration is known,
-    changes exactly "False" to true in Release builds. A value the project sets itself, such as
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>, is spelled differently, so it's kept.
+    A project can also choose its configuration in its own file, after this. For that case, if
+    nothing has set TreatWarningsAsErrors yet, we note that the decision is ours to make, and
+    Endjin.Common.Net.targets makes it once the final configuration is known.
 
-    A project (or Directory.Build.props) that sets TreatWarningsAsErrors itself keeps its value,
-    so you can make warnings errors in every configuration with:
+    A value set in Directory.Build.props, on the command line, in the project file, or in
+    Directory.Build.targets is always kept. So you can make warnings errors in every configuration
+    with:
 
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   -->
   <PropertyGroup Condition="'$(TreatWarningsAsErrors)' == ''">
+    <_EndjinDecidesTreatWarningsAsErrors>true</_EndjinDecidesTreatWarningsAsErrors>
     <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
-    <TreatWarningsAsErrors Condition="'$(Configuration)' != 'Release'">False</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup>

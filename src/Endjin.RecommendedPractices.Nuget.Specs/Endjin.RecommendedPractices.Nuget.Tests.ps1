@@ -478,10 +478,10 @@ Describe 'Project conventions' {
         $result.Output | Should -Match 'error CS0168'
     }
 
-    It 'keeps TreatWarningsAsErrors false when the project sets it, in a Release build' {
+    It 'keeps TreatWarningsAsErrors <_> when the project file sets it and selects Release' -ForEach @('false', 'False') {
         $code = $houseStyleClass.Replace('return DateTimeOffset.UtcNow;', "int unused;`r`n        return DateTimeOffset.UtcNow;")
-        $properties = '<Configuration>Release</Configuration><TreatWarningsAsErrors>false</TreatWarningsAsErrors>'
-        $dir = New-Scenario -Name 'warnings-release-opt-out' -ProjectXml (New-ProjectXml -Properties $properties) -Files @{ 'Proj/Widget.cs' = $code }
+        $properties = "<Configuration>Release</Configuration><TreatWarningsAsErrors>$_</TreatWarningsAsErrors>"
+        $dir = New-Scenario -Name "warnings-release-opt-out-$_" -ProjectXml (New-ProjectXml -Properties $properties) -Files @{ 'Proj/Widget.cs' = $code }
         $result = Invoke-Scenario $dir @('build', 'Proj/Proj.csproj') -Configuration ''
         $result.ExitCode | Should -Be 0 -Because $result.Output
         $result.Output | Should -Match 'warning CS0168'

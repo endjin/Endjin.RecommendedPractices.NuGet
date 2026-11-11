@@ -128,11 +128,19 @@
         Endjin.Common.Net.props makes warnings errors in Release builds when the configuration is
         passed in (dotnet build -c Release, Visual Studio, dotnet pack). A project can also choose
         its configuration in its own file, which is only evaluated after our .props, so we check
-        again here, where the final configuration is known. Our .props leaves exactly "False"
-        (capital F) when it couldn't decide; the ordinal comparison below tells that apart from a
-        value the project set itself (such as "false"), which is kept.
+        again here, where the final configuration is known.
+
+        By now the .NET SDK has set TreatWarningsAsErrors to false (its default, applied after our
+        .props), so its value can't tell us whether the project chose false. Instead: our .props
+        notes when nothing had set it before the project (_EndjinDecidesTreatWarningsAsErrors),
+        and we look at the project file itself. If the project file sets TreatWarningsAsErrors,
+        its value is kept, whatever it is. (Directory.Build.targets is imported after this file,
+        so a value set there wins anyway.)
     -->
-    <PropertyGroup Condition="$(TreatWarningsAsErrors.Equals('False')) And '$(Configuration)' == 'Release'">
+    <PropertyGroup Condition="'$(_EndjinDecidesTreatWarningsAsErrors)' == 'true' And '$(Configuration)' == 'Release' And '$(TreatWarningsAsErrors)' != 'true' And Exists('$(MSBuildProjectFullPath)')">
+        <_EndjinProjectSetsTreatWarningsAsErrors>$([System.Text.RegularExpressions.Regex]::IsMatch($([System.IO.File]::ReadAllText('$(MSBuildProjectFullPath)')), '&lt;TreatWarningsAsErrors[\s&gt;]'))</_EndjinProjectSetsTreatWarningsAsErrors>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(_EndjinDecidesTreatWarningsAsErrors)' == 'true' And '$(Configuration)' == 'Release' And '$(TreatWarningsAsErrors)' != 'true' And '$(_EndjinProjectSetsTreatWarningsAsErrors)' == 'False'">
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
