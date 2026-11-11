@@ -6,14 +6,17 @@
         GitHub repo details, and you can only run tasks in a Target. So we have to
         set all these NuGet properties during the Target execution phase. We make this
         run before Compile because the Compile Target runs some code generation tasks
-        that will in some circumstances attempt to use some of these properties.
+        that will in some circumstances attempt to use some of these properties. It also
+        runs before GenerateNuspec, because Compile doesn't run in every pack: not when
+        "dotnet pack" is given the no-build option, and not in the outer build of a project
+        that targets multiple frameworks, which is where the package is created.
 
         Although this is the GitHub-specific package, the basic Endjin.RecommendedPractices
         detects the presence of a Git repo and determines the org and project names as
         part of that, so we just depend on the _EndjinSetGitHubProperties task from that
         package and use its outputs here to set the relevant NuGet package properties.
     -->
-    <Target Name="_EndjinSetGitHubProperties" BeforeTargets="Compile" DependsOnTargets="EndjinDetectGitHub">
+    <Target Name="_EndjinSetGitHubProperties" BeforeTargets="Compile;GenerateNuspec" DependsOnTargets="EndjinDetectGitHub">
         <!--
             Source Link for GitHub comes from the .NET SDK's built-in support, not from a package
             dependency. MicrosoftBuildTasksGitAssemblyFile is set by the SDK's Source Link support,

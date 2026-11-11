@@ -86,6 +86,13 @@ BeforeAll {
         ForEach-Object { Join-Path $globalPackagesDir "$_/0.0.1-local" } |
         Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
 
+    # MSBuild's reusable worker processes cache the .props/.targets files they import, and treat
+    # files in the NuGet packages folder as unchanging. Because every run repacks the packages as
+    # 0.0.1-local, a worker left over from an earlier build can apply the previous run's files. So
+    # stop any running build servers, and don't leave new ones behind.
+    Invoke-DotNet build-server shutdown
+    $env:MSBUILDDISABLENODEREUSE = '1'
+
     # Restore the specs solution from the locally built packages (and nuget.org, for their
     # dependencies) using a config file passed on the command line, so we don't change the
     # user's or build agent's NuGet configuration.
@@ -139,6 +146,15 @@ Describe 'Building the specs solution' {
 
     It 'creates a <_> file for the MultiFramework project' -ForEach @('nupkg', 'snupkg') {
         (Join-Path $packageOutputDir "MultiFramework.0.0.1-local.$_") | Should -Exist
+    }
+
+    # The specs projects reference Endjin.RecommendedPractices.GitHub, and this repository is on
+    # GitHub. Both are packed with --no-build, which skips Compile; MultiFramework's package is also
+    # created in the outer (multi-targeting) build, where Compile never runs.
+    It 'sets the GitHub project URL and release notes in the <_> package' -ForEach @('SingleFramework', 'MultiFramework') {
+        $nuspec = Get-PackageEntryText (Join-Path $packageOutputDir "$_.0.0.1-local.nupkg") "$_.nuspec"
+        $nuspec | Should -Match '<projectUrl>https://github\.com/[^/<]+/[^/<]+</projectUrl>'
+        $nuspec | Should -Match '<releaseNotes>See https://github\.com/[^/<]+/[^/<]+/releases/</releaseNotes>'
     }
 
     It 'does not make the SingleFramework package depend on the development-only packages' {
