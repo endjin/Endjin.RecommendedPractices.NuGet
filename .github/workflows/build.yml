@@ -1,0 +1,63 @@
+name: build
+on:
+  push:
+    branches:
+    - main
+    tags:
+    - '*'
+  pull_request:
+    branches:
+    - main
+  workflow_dispatch:
+    inputs:
+      forcePublish:
+        description: When true the Publish stage will always be run, otherwise it only runs for tagged versions. Publish pushes the packages to nuget.org and creates a GitHub release with them attached.
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  actions: write  # enable cache clean-up
+  checks: write  # enable test result annotations
+  contents: write  # enable creating releases
+  issues: read
+  packages: write  # enable publishing packages
+  pull-requests: write  # enable test result annotations
+
+jobs:
+  # The ZeroFailed build (./build.ps1, configured in .zf/config.ps1): run the Pester specs, pack both
+  # .nuspec files and, for tag builds or a manual run with forcePublish, publish them.
+  build:
+    name: Build
+    runs-on: windows-latest
+    outputs:
+      semver: ${{ steps.run_build.outputs.semver }}
+      major: ${{ steps.run_build.outputs.major }}
+      majorMinor: ${{ steps.run_build.outputs.majorMinor }}
+      preReleaseTag: ${{ steps.run_build.outputs.preReleaseTag }}
+    steps:
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/prepare-env-vars-and-secrets@main
+      id: prepareEnvVarsAndSecrets
+      with:
+        # ZF_NUGET_PUBLISH_SOURCE is read by .zf/config.ps1. The Publish stage only runs for tag
+        # builds and forcePublish runs.
+        environmentVariablesYaml: |
+          ZF_NUGET_PUBLISH_SOURCE: https://api.nuget.org/v3/index.json
+        secretsYaml: |
+          NUGET_API_KEY: "${{ secrets.NUGET_APIKEY }}"
+        secretsEncryptionKey: ${{ secrets.SHARED_WORKFLOW_KEY }}
+
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-build-process@main
+      id: run_build
+      with:
+        # The packages require the .NET 10 SDK or later, and so does packing a .nuspec directly.
+        netSdkVersion: '10.0.x'
+        forcePublish: ${{ github.event.inputs.forcePublish == 'true' }}
+        buildEnv: ${{ steps.prepareEnvVarsAndSecrets.outputs.environmentVariablesYamlBase64 }}
+        buildSecrets: ${{ steps.prepareEnvVarsAndSecrets.outputs.secretsYamlBase64 }}
+        secretsEncryptionKey: ${{ secrets.SHARED_WORKFLOW_KEY }}
+        token: ${{ secrets.GITHUB_TOKEN }}

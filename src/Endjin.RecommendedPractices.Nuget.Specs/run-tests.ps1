@@ -17,6 +17,10 @@ try {
     $config.Run.Path = $here
     $config.Run.PassThru = $true
     $config.Output.Verbosity = 'Detailed'
+    # The GitHub Actions build publishes files matching '**/*-test-results.xml' as test results.
+    $config.TestResult.Enabled = $true
+    $config.TestResult.OutputFormat = 'NUnitXml'
+    $config.TestResult.OutputPath = Join-Path $here "pester-test-results.xml"
     $results = Invoke-Pester -Configuration $config
 
     if ($results.FailedCount -gt 0) {

@@ -46,7 +46,7 @@ You can use the local package feed by adding a `NuGet.config` file to any .NET s
 
 This works for Visual Studio. It's not clear if it will work for command line development—various Stack Overflow posts suggest you need a `<config>` section that adds the local path value under two different keys: `repositoryPath` and `globalPackagesFolder`. But in my experience, this goes on to break in quite hard to diagnose ways, so I wouldn't recommend it. The alternative is to add this feed to your global feed configuration using either `dotnet nuget add source` or the Visual Studio feed settings page.
 
-The automated tests ([Endjin.RecommendedPractices.Nuget.Tests.ps1](../../src/Endjin.RecommendedPractices.Nuget.Specs/Endjin.RecommendedPractices.Nuget.Tests.ps1), run by `run-tests.ps1`) don't change your NuGet configuration. They pack both packages, then restore the specs solution with a temporary config file passed to `dotnet restore --configfile`.
+To run the automated tests, run `./build.ps1 -Tasks Test` from the repository root, or run `run-tests.ps1` directly. The automated tests ([Endjin.RecommendedPractices.Nuget.Tests.ps1](../../src/Endjin.RecommendedPractices.Nuget.Specs/Endjin.RecommendedPractices.Nuget.Tests.ps1), run by `run-tests.ps1`) don't change your NuGet configuration. They pack both packages, then restore the specs solution with a temporary config file passed to `dotnet restore --configfile`.
 
 However you choose to do it, once the local feed is available, you can add a reference to the versions of the packages in your local feed.
 

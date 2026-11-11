@@ -21,7 +21,15 @@ The set of code analysis rules will gradually change because the .NET SDK incorp
 
 ## CI / CD
 
-The project is [hosted on Azure DevOps](https://dev.azure.com/endjin-labs/Endjin.RecommendedPractices.NuGet) under the `endjin-labs` org.
+The build uses [ZeroFailed](https://github.com/zerofailed/ZeroFailed) and runs in [GitHub Actions](.github/workflows/build.yml). To run it locally (PowerShell 7 and the .NET 10 SDK required):
+
+```
+./build.ps1
+```
+
+This runs the Pester specs and packs both packages into `_packages`. The build is configured in [.zf/config.ps1](.zf/config.ps1).
+
+Releases use endjin's [pr-autoflow](https://github.com/endjin/pr-autoflow) process. When a pull request labelled `pending_release` is merged into `main`, [auto_release](.github/workflows/auto_release.yml) tags `main` with the next version. The tag build pushes the packages to nuget.org and creates a GitHub release with the packages attached.
 
 ## Packages
 
