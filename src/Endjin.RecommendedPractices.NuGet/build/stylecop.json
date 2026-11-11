@@ -5,7 +5,7 @@
     // using Endjin.RecommendedPractices:
     //  <EndjinDisableCodeAnalysis>true</EndjinDisableCodeAnalysis>
     // and then delete this file. That setting will prevent the package from recreating this file. It also turns off the
-    // StyleCop and Roslynator analyzers that the package adds.
+    // StyleCop, Roslynator and Threading analyzers that the package adds.
     "$schema": "https://raw.githubusercontent.com/DotNetAnalyzers/StyleCopAnalyzers/master/StyleCop.Analyzers/StyleCop.Analyzers/Settings/stylecop.schema.json",
     "settings": {
         "documentationRules": {

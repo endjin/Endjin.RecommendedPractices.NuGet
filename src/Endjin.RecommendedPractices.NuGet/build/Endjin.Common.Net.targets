@@ -15,14 +15,26 @@
 
         <EndjinDisableCodeAnalysis>true</EndjinDisableCodeAnalysis>
 
-        which also removes the StyleCop.Analyzers and Roslynator.Analyzers analyzers from
-        compilation (see _EndjinRemoveCodeAnalysisAnalyzers below). The .editorconfig (and the
+        which also removes the StyleCop.Analyzers, Roslynator.Analyzers and
+        Microsoft.VisualStudio.Threading.Analyzers analyzers from compilation (see
+        _EndjinRemoveCodeAnalysisAnalyzers below). The .editorconfig (and the
         global analyzer config) can be turned off with:
 
         <EndjinDisableCreateEditorConfig>true</EndjinDisableCreateEditorConfig>
+
+        The copies are a convenience, so that the settings are visible and easy to change. The
+        build doesn't depend on them: the package supplies the same stylecop.json settings, C#
+        .editorconfig settings and package icon itself (see Endjin.Common.Net.props and
+        _EndjinIncludePackageIcon below). So a solution that doesn't want a NuGet package writing
+        files into its solution folder can turn off all three copies, and keep the settings,
+        with:
+
+        <EndjinDisableSolutionLevelFiles>true</EndjinDisableSolutionLevelFiles>
+
+        See docs/adr/0006-solution-level-files-are-optional.md.
     -->
     <Target Name="_EndjinEnsureCodeAnalysisRuleSet" AfterTargets="BeforeBuild" BeforeTargets="CoreBuild">
-        <Copy Condition="($(EndjinDisableCodeAnalysis) != 'true') and (!Exists('$(SolutionDir)stylecop.json'))" SourceFiles="$(MSBuildThisFileDirectory)stylecop.json" DestinationFiles="$(SolutionDir)stylecop.json" />
+        <Copy Condition="($(EndjinDisableCodeAnalysis) != 'true') and ($(EndjinDisableSolutionLevelFiles) != 'true') and (!Exists('$(SolutionDir)stylecop.json'))" SourceFiles="$(MSBuildThisFileDirectory)stylecop.json" DestinationFiles="$(SolutionDir)stylecop.json" />
     </Target>
 
     <!--
@@ -31,7 +43,7 @@
         the solution folder under its real name.
     -->
     <Target Name="_EndjinEnsureEditorConfig" AfterTargets="BeforeBuild" BeforeTargets="CoreBuild">
-        <Copy Condition="($(EndjinDisableCreateEditorConfig) != 'true') and (!Exists('$(SolutionDir).editorconfig'))" SourceFiles="$(MSBuildThisFileDirectory)default.editorconfig" DestinationFiles="$(SolutionDir).editorconfig" />
+        <Copy Condition="($(EndjinDisableCreateEditorConfig) != 'true') and ($(EndjinDisableSolutionLevelFiles) != 'true') and (!Exists('$(SolutionDir).editorconfig'))" SourceFiles="$(MSBuildThisFileDirectory)default.editorconfig" DestinationFiles="$(SolutionDir).editorconfig" />
     </Target>
 
     <!--
@@ -40,7 +52,29 @@
         after adding this package.
     -->
     <Target Name="_EndjinEnsureSolutionLevelPackageIcon" AfterTargets="BeforeBuild" BeforeTargets="CoreBuild">
-        <Copy Condition="($(IsPackable) != 'false') and ($(EndjinDisableDefaultPackageIconInclusion) != 'true') and (!Exists('$(SolutionDir)PackageIcon.png'))" SourceFiles="$(MSBuildThisFileDirectory)/DefaultPackageIcon.png" DestinationFiles="$(SolutionDir)PackageIcon.png" />
+        <Copy Condition="($(IsPackable) != 'false') and ($(EndjinDisableDefaultPackageIconInclusion) != 'true') and ($(EndjinDisableSolutionLevelFiles) != 'true') and (!Exists('$(SolutionDir)PackageIcon.png'))" SourceFiles="$(MSBuildThisFileDirectory)DefaultPackageIcon.png" DestinationFiles="$(SolutionDir)PackageIcon.png" />
+    </Target>
+
+    <!--
+        Endjin.Common.NuGet.props uses the solution's PackageIcon.png if it exists when the project
+        is loaded. It doesn't exist yet on the first build of a clean checkout that doesn't commit it
+        (the copy above happens during the build), or ever when EndjinDisableSolutionLevelFiles is
+        true. Without this target, those packages would silently have no icon. So when packing, if
+        no icon has been set, we use the solution's PackageIcon.png if it now exists, and otherwise
+        the package's default icon.
+    -->
+    <Target
+        Name="_EndjinIncludePackageIcon"
+        BeforeTargets="_GetPackageFiles;GenerateNuspec"
+        Condition="('$(IsPackable)' != 'false') and ('$(EndjinDisableDefaultPackageIconInclusion)' != 'true') and ('$(PackageIcon)' == '')">
+        <PropertyGroup>
+            <_EndjinPackageIconFile Condition="Exists('$(SolutionDir)PackageIcon.png')">$(SolutionDir)PackageIcon.png</_EndjinPackageIconFile>
+            <_EndjinPackageIconFile Condition="'$(_EndjinPackageIconFile)' == ''">$(MSBuildThisFileDirectory)DefaultPackageIcon.png</_EndjinPackageIconFile>
+            <PackageIcon>PackageIcon.png</PackageIcon>
+        </PropertyGroup>
+        <ItemGroup>
+            <None Include="$(_EndjinPackageIconFile)" Link="PackageIcon.png" Pack="true" PackagePath="PackageIcon.png" />
+        </ItemGroup>
     </Target>
 
     <!--
@@ -72,15 +106,16 @@
     </ItemGroup>
 
     <!--
-        StyleCop.Analyzers and Roslynator.Analyzers come in as dependencies of this package (see
-        the nuspec), so they can't be left out of restore conditionally. Instead, when
+        StyleCop.Analyzers, Roslynator.Analyzers and Microsoft.VisualStudio.Threading.Analyzers come
+        in as dependencies of this package (see the nuspec), so they can't be left out of restore
+        conditionally. Instead, when
         EndjinDisableCodeAnalysis is true, we remove their analyzers after NuGet has resolved
         them. ResolveLockFileAnalyzers also runs in Visual Studio design-time builds, so the
         IDE respects the setting too.
     -->
     <Target Name="_EndjinRemoveCodeAnalysisAnalyzers" AfterTargets="ResolveLockFileAnalyzers" Condition="'$(EndjinDisableCodeAnalysis)' == 'true'">
         <ItemGroup>
-            <Analyzer Remove="@(Analyzer)" Condition="'%(Analyzer.NuGetPackageId)' == 'StyleCop.Analyzers' Or '%(Analyzer.NuGetPackageId)' == 'Roslynator.Analyzers'" />
+            <Analyzer Remove="@(Analyzer)" Condition="'%(Analyzer.NuGetPackageId)' == 'StyleCop.Analyzers' Or '%(Analyzer.NuGetPackageId)' == 'Roslynator.Analyzers' Or '%(Analyzer.NuGetPackageId)' == 'Microsoft.VisualStudio.Threading.Analyzers'" />
         </ItemGroup>
     </Target>
 

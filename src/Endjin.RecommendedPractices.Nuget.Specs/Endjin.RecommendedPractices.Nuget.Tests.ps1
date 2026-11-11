@@ -128,8 +128,8 @@ BeforeAll {
     $scenarioRoot = Join-Path $here "Scenarios"
     Remove-Item $scenarioRoot -Force -Recurse -ErrorAction SilentlyContinue
 
-    # A file that follows the endjin house style. No final newline: default.editorconfig sets
-    # insert_final_newline = false.
+    # A file that follows the endjin house style, ending with a single newline (default.editorconfig
+    # sets insert_final_newline = true).
     $houseStyleClass = (@'
 // <copyright file="Widget.cs" company="Endjin Limited">
 // Copyright (c) Endjin Limited. All rights reserved.
@@ -153,7 +153,7 @@ public class Widget
         return DateTimeOffset.UtcNow;
     }
 }
-'@).ReplaceLineEndings("`r`n").TrimEnd()
+'@).ReplaceLineEndings("`r`n").TrimEnd() + "`r`n"
 
     # A console app entry point in the house style.
     $houseStyleProgram = (@'
@@ -175,7 +175,7 @@ internal static class Program
     {
     }
 }
-'@).ReplaceLineEndings("`r`n").TrimEnd()
+'@).ReplaceLineEndings("`r`n").TrimEnd() + "`r`n"
 
     function New-ProjectXml {
         param (
@@ -229,8 +229,14 @@ internal static class Program
     #
     # Scenarios behave the same locally and on a CI server: the variables the package uses to
     # detect a CI server are cleared, unless the scenario sets them through -Environment.
+    #
+    # Scenarios build the Release configuration unless -Configuration says otherwise, because
+    # that's where the package makes warnings errors (as CI and packaging do).
     function Invoke-Scenario {
-        param ([string] $Dir, [string[]] $Arguments, [hashtable] $Environment = @{})
+        param ([string] $Dir, [string[]] $Arguments, [hashtable] $Environment = @{}, [string] $Configuration = 'Release')
+
+        # The command (e.g. 'build') must stay first.
+        $Arguments = @($Arguments[0], "-p:Configuration=$Configuration") + @($Arguments | Select-Object -Skip 1)
 
         $variables = @{ TF_BUILD = $null; GITHUB_ACTIONS = $null }
         foreach ($name in $Environment.Keys) { $variables[$name] = $Environment[$name] }
@@ -295,10 +301,11 @@ Describe 'Endjin.RecommendedPractices package' {
         }
     }
 
-    It 'depends on the StyleCop and Roslynator analyzers' {
+    It 'depends on the StyleCop, Roslynator and threading analyzers' {
         $nuspec = Get-PackageEntryText (Join-Path $packageOutputDir "Endjin.RecommendedPractices.0.0.1-local.nupkg") "Endjin.RecommendedPractices.nuspec"
         $nuspec | Should -Match 'id="StyleCop\.Analyzers"'
         $nuspec | Should -Match 'id="Roslynator\.Analyzers"'
+        $nuspec | Should -Match 'id="Microsoft\.VisualStudio\.Threading\.Analyzers"'
     }
 }
 
@@ -443,6 +450,22 @@ Describe 'Project conventions' {
         $result.Output | Should -Match 'error CS0168'
     }
 
+    It 'does not treat warnings as errors in a Debug build' {
+        $code = $houseStyleClass.Replace('return DateTimeOffset.UtcNow;', "int unused;`r`n        return DateTimeOffset.UtcNow;")
+        $dir = New-Scenario -Name 'warnings-debug' -Files @{ 'Proj/Widget.cs' = $code }
+        $result = Invoke-Scenario $dir @('build', 'Proj/Proj.csproj') -Configuration Debug
+        $result.ExitCode | Should -Be 0 -Because $result.Output
+        $result.Output | Should -Match 'warning CS0168'
+    }
+
+    It 'treats warnings as errors in a Debug build when the project sets TreatWarningsAsErrors' {
+        $code = $houseStyleClass.Replace('return DateTimeOffset.UtcNow;', "int unused;`r`n        return DateTimeOffset.UtcNow;")
+        $dir = New-Scenario -Name 'warnings-debug-opt-in' -ProjectXml (New-ProjectXml -Properties '<TreatWarningsAsErrors>true</TreatWarningsAsErrors>') -Files @{ 'Proj/Widget.cs' = $code }
+        $result = Invoke-Scenario $dir @('build', 'Proj/Proj.csproj') -Configuration Debug
+        $result.ExitCode | Should -Not -Be 0
+        $result.Output | Should -Match 'error CS0168'
+    }
+
     It 'requires XML documentation on public members of a packable project' {
         $code = $houseStyleClass.Replace("    /// <summary>`r`n    /// Gets the current time.`r`n    /// </summary>`r`n    /// <returns>The current time.</returns>`r`n", '')
         $dir = New-Scenario -Name 'undocumented-packable' -Files @{ 'Proj/Widget.cs' = $code }
@@ -489,11 +512,27 @@ Describe 'Code analysis on the first build of a clean checkout' {
         $result.Output | Should -Match 'error SA1633'
     }
 
-    It 'applies the house rules from the default .editorconfig, such as no final newline' {
-        $dir = New-Scenario -Name 'final-newline' -Files @{ 'Proj/Widget.cs' = $houseStyleClass + "`r`n" }
+    It 'applies the house rules from the default .editorconfig, such as requiring a final newline' {
+        $dir = New-Scenario -Name 'final-newline' -Files @{ 'Proj/Widget.cs' = $houseStyleClass.TrimEnd() }
         $result = Invoke-Scenario $dir @('build', 'Proj/Proj.csproj')
         $result.ExitCode | Should -Not -Be 0
         $result.Output | Should -Match 'error SA1518'
+    }
+
+    It 'does not report RCS1089 for an increment written as an assignment' {
+        $code = $houseStyleClass.Replace("    public DateTimeOffset GetNow()`r`n    {`r`n        return DateTimeOffset.UtcNow;`r`n    }", "    public int Increment(int count)`r`n    {`r`n        count += 1;`r`n        return count;`r`n    }").Replace('Gets the current time.', 'Increments a count.').Replace('<returns>The current time.</returns>', "<param name=""count"">The count.</param>`r`n    /// <returns>The incremented count.</returns>")
+        $dir = New-Scenario -Name 'increment-assignment' -Files @{ 'Proj/Widget.cs' = $code }
+        $result = Invoke-Scenario $dir @('build', 'Proj/Proj.csproj')
+        $result.ExitCode | Should -Be 0 -Because $result.Output
+        $result.Output | Should -Not -Match '(warning|error) RCS1089'
+    }
+
+    It 'reports async void methods (VSTHRD100) from the threading analyzers' {
+        $code = $houseStyleClass.Replace("    public DateTimeOffset GetNow()`r`n    {`r`n        return DateTimeOffset.UtcNow;`r`n    }", "    public async void Run()`r`n    {`r`n        await Task.Yield();`r`n    }").Replace('using System;', 'using System.Threading.Tasks;').Replace('Gets the current time.', 'Runs.').Replace("    /// <returns>The current time.</returns>`r`n", '')
+        $dir = New-Scenario -Name 'async-void' -Files @{ 'Proj/Widget.cs' = $code }
+        $result = Invoke-Scenario $dir @('build', 'Proj/Proj.csproj')
+        $result.ExitCode | Should -Not -Be 0
+        $result.Output | Should -Match 'error VSTHRD100'
     }
 
     It 'does not run the StyleCop rules, or create stylecop.json, when EndjinDisableCodeAnalysis is true' {
@@ -507,18 +546,37 @@ Describe 'Code analysis on the first build of a clean checkout' {
     It 'does not create .editorconfig or apply its settings when EndjinDisableCreateEditorConfig is true' {
         # No using directive: without the house settings, StyleCop also wants usings inside the
         # namespace (SA1200), which would make this fail for a different reason.
-        $code = $houseStyleClass.Replace("using System;`r`n`r`n", '').Replace('DateTimeOffset', 'System.DateTimeOffset') + "`r`n"
+        $code = $houseStyleClass.Replace("using System;`r`n`r`n", '').Replace('DateTimeOffset', 'System.DateTimeOffset').TrimEnd()
         $dir = New-Scenario -Name 'editorconfig-disabled' -ProjectXml (New-ProjectXml -Properties '<EndjinDisableCreateEditorConfig>true</EndjinDisableCreateEditorConfig>') -Files @{ 'Proj/Widget.cs' = $code }
         $result = Invoke-Scenario $dir @('build', 'Proj/Proj.csproj')
-        $result.ExitCode | Should -Be 0 -Because "without the house settings a final newline is allowed`n$($result.Output)"
+        $result.ExitCode | Should -Be 0 -Because "without the house settings a missing final newline is allowed`n$($result.Output)"
         (Join-Path $dir '.editorconfig') | Should -Not -Exist
     }
 
     It 'lets the solution''s own .editorconfig override the house settings' {
-        $editorConfig = "root = true`r`n`r`n[*.cs]`r`ninsert_final_newline = true`r`n"
-        $dir = New-Scenario -Name 'own-editorconfig' -Files @{ 'Proj/Widget.cs' = $houseStyleClass + "`r`n"; '.editorconfig' = $editorConfig }
+        $editorConfig = "root = true`r`n`r`n[*.cs]`r`ninsert_final_newline = false`r`n"
+        $dir = New-Scenario -Name 'own-editorconfig' -Files @{ 'Proj/Widget.cs' = $houseStyleClass.TrimEnd(); '.editorconfig' = $editorConfig }
         $result = Invoke-Scenario $dir @('build', 'Proj/Proj.csproj')
         $result.ExitCode | Should -Be 0 -Because $result.Output
+    }
+
+    It 'applies the house settings without writing any solution-level files when EndjinDisableSolutionLevelFiles is true' {
+        $dir = New-Scenario -Name 'no-solution-files' -ProjectXml (New-ProjectXml -Properties '<EndjinDisableSolutionLevelFiles>true</EndjinDisableSolutionLevelFiles>')
+        # The house-style file only passes with the package's stylecop.json (company name) and
+        # .editorconfig settings (usings outside a file-scoped namespace).
+        $result = Invoke-Scenario $dir @('pack', 'Proj/Proj.csproj', '-o', 'out')
+        $result.ExitCode | Should -Be 0 -Because $result.Output
+        foreach ($file in @('.editorconfig', 'stylecop.json', 'PackageIcon.png')) {
+            (Join-Path $dir $file) | Should -Not -Exist
+        }
+        Get-PackageEntryNames (Join-Path $dir 'out/Proj.1.0.0.nupkg') | Should -Contain 'PackageIcon.png'
+    }
+
+    It 'enforces the house settings when EndjinDisableSolutionLevelFiles is true' {
+        $dir = New-Scenario -Name 'no-solution-files-final-newline' -ProjectXml (New-ProjectXml -Properties '<EndjinDisableSolutionLevelFiles>true</EndjinDisableSolutionLevelFiles>') -Files @{ 'Proj/Widget.cs' = $houseStyleClass.TrimEnd() }
+        $result = Invoke-Scenario $dir @('build', 'Proj/Proj.csproj')
+        $result.ExitCode | Should -Not -Be 0
+        $result.Output | Should -Match 'error SA1518'
     }
 
     It 'does not overwrite the solution''s own <_>' -ForEach @('.editorconfig', 'stylecop.json', 'PackageIcon.png') {
@@ -561,6 +619,16 @@ Describe 'Packing a consuming project' {
         $pack = Invoke-Scenario $dir @('pack', 'Nested.sln', '-o', 'out')
         $pack.ExitCode | Should -Be 0 -Because $pack.Output
         Get-PackageEntryNames (Join-Path $dir 'out/Nested.1.0.0.nupkg') | Should -Contain 'PackageIcon.png'
+    }
+
+    It 'includes the package icon when a clean checkout is packed without building first' {
+        # The solution-level PackageIcon.png doesn't exist when the project is loaded; the build
+        # inside 'dotnet pack' creates it.
+        $dir = New-Scenario -Name 'first-pack-icon'
+        $result = Invoke-Scenario $dir @('pack', 'Proj/Proj.csproj', '-o', 'out')
+        $result.ExitCode | Should -Be 0 -Because $result.Output
+        Get-PackageEntryNames (Join-Path $dir 'out/Proj.1.0.0.nupkg') | Should -Contain 'PackageIcon.png'
+        Get-PackageEntryText (Join-Path $dir 'out/Proj.1.0.0.nupkg') 'Proj.nuspec' | Should -Match '<icon>PackageIcon\.png</icon>'
     }
 
     It 'leaves out the default package icon when EndjinDisableDefaultPackageIconInclusion is true' {
@@ -643,6 +711,31 @@ Describe 'GitHub support' {
         $nuspec | Should -Match 'url="https://example\.com/custom\.git"'
     }
 
+    It 'finds a GitHub repository with an scp-style remote from a project far below the repository root' {
+        # Outside this repository: a new Git repository whose origin is git@github.com:acme/widgets.git,
+        # with the project eight folders down.
+        $repo = Join-Path ([System.IO.Path]::GetTempPath()) "Endjin.RecommendedPractices.Specs.ScpRemote"
+        Remove-Item $repo -Force -Recurse -ErrorAction SilentlyContinue
+        $projectDir = Join-Path $repo 'a/b/c/d/e/f/g/Proj'
+        New-Item -ItemType Directory -Force -Path $projectDir | Out-Null
+        try {
+            git -C $repo init -q
+            git -C $repo remote add origin git@github.com:acme/widgets.git
+            [System.IO.File]::WriteAllText((Join-Path $projectDir 'Proj.csproj'), (New-ProjectXml))
+            [System.IO.File]::WriteAllText((Join-Path $projectDir 'Widget.cs'), $houseStyleClass)
+            git -C $repo add -A
+            git -C $repo -c user.name=specs -c user.email=specs@example.com commit -q -m init
+            $result = Invoke-Scenario $projectDir @('pack', 'Proj.csproj', '-o', 'out')
+            $result.ExitCode | Should -Be 0 -Because $result.Output
+            $nuspec = Get-PackageEntryText (Join-Path $projectDir 'out/Proj.1.0.0.nupkg') 'Proj.nuspec'
+            $nuspec | Should -Match '<projectUrl>https://github\.com/acme/widgets</projectUrl>'
+            $nuspec | Should -Match '<releaseNotes>See https://github\.com/acme/widgets/releases/</releaseNotes>'
+        }
+        finally {
+            Remove-Item $repo -Force -Recurse -ErrorAction SilentlyContinue
+        }
+    }
+
     It 'does not set GitHub URLs for a project that is not in a GitHub repository' {
         # Outside this repository: a temporary folder that isn't in any Git repository.
         $outside = Join-Path ([System.IO.Path]::GetTempPath()) "Endjin.RecommendedPractices.Specs.NotGitHub"
@@ -683,15 +776,17 @@ Describe '.NET SDK version check' {
 
 Describe 'Code analyzers' {
 
-    It 'passes the StyleCop and Roslynator analyzers to the compiler' {
+    It 'passes the StyleCop, Roslynator and threading analyzers to the compiler' {
         $ids = Get-AnalyzerPackageIds
         $ids | Should -Contain 'StyleCop.Analyzers'
         $ids | Should -Contain 'Roslynator.Analyzers'
+        $ids | Should -Contain 'Microsoft.VisualStudio.Threading.Analyzers'
     }
 
-    It 'removes the StyleCop and Roslynator analyzers when EndjinDisableCodeAnalysis is true' {
+    It 'removes the StyleCop, Roslynator and threading analyzers when EndjinDisableCodeAnalysis is true' {
         $ids = Get-AnalyzerPackageIds @('/p:EndjinDisableCodeAnalysis=true')
         $ids | Should -Not -Contain 'StyleCop.Analyzers'
         $ids | Should -Not -Contain 'Roslynator.Analyzers'
+        $ids | Should -Not -Contain 'Microsoft.VisualStudio.Threading.Analyzers'
     }
 }

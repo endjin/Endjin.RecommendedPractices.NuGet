@@ -22,19 +22,20 @@
         when they upgrade from v1 to v2, they need to change the reference if they want the
         same behaviour. We want to issue a warning when this seems to have happened.
 
-        To detect when a project is hosted on GitHub, we use the LocateRepository task from
-        Microsoft.Build.Tasks.Git. We deliberately do NOT take a package dependency on it:
-        the .NET SDK ships its own copy, built for the runtime that SDK's MSBuild runs on, as
-        part of its built-in Source Link support. Each package version only loads on the MSBuild
-        it was built for, and referencing any Source Link package also switches off the SDK's
-        built-in Source Link. Using the SDK's copy means every consumer gets the version that
-        matches their SDK. See Endjin.IssueGitHubWarningIfAppropriate.targets.
+        To detect when a project is hosted on GitHub, Endjin.IssueGitHubWarningIfAppropriate.targets
+        reads the repository's Git configuration in MSBuild, so it needs no task assembly. We
+        deliberately take no dependency on Microsoft.Build.Tasks.Git or Microsoft.SourceLink.*:
+        each version of those only loads on the MSBuild it was built for, and referencing any
+        Source Link package switches off the .NET SDK's built-in Source Link, which matches the
+        SDK in use.
 
         The minimum supported .NET SDK is enforced by Endjin.VerifySdkVersion.targets.
         -->
 
         <!--
-        The code analyzers are package dependencies, not PackageReference items in our build
+        The code analyzers (StyleCop, Roslynator, and the Microsoft.VisualStudio.Threading
+        analyzers, which catch async and threading mistakes such as async void methods) are
+        package dependencies, not PackageReference items in our build
         targets. NuGet restore doesn't read the build files of the packages it is restoring, so
         PackageReferences declared there are never restored, and the analyzers never run.
 
@@ -51,6 +52,7 @@
         <dependencies>
             <dependency id="StyleCop.Analyzers" version="1.3.180" />
             <dependency id="Roslynator.Analyzers" version="5.0.1" />
+            <dependency id="Microsoft.VisualStudio.Threading.Analyzers" version="18.12.1" />
         </dependencies>
     </metadata>
 

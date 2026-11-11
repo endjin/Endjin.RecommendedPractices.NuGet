@@ -56,8 +56,26 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
-  <PropertyGroup>
+  <!--
+    Warnings are errors in Release builds only. That still stops code with warnings from being
+    merged, because CI and packaging build Release (dotnet pack and dotnet publish default to
+    Release), but it lets developers experiment in Debug builds without first having to satisfy
+    every analyzer.
+
+    Configuration is only known here when it is passed in (dotnet build -c Release, Visual Studio,
+    dotnet pack): the .NET SDK sets its Debug default after this file. That's enough, because a
+    Debug build is exactly the case where we don't want warnings to be errors.
+
+    A project (or Directory.Build.props) that sets TreatWarningsAsErrors itself keeps its value,
+    so you can make warnings errors in every configuration with:
+
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  -->
+  <PropertyGroup Condition="'$(TreatWarningsAsErrors)' == '' And '$(Configuration)' == 'Release'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <TreatSpecificWarningsAsErrors />
     <WarningsAsErrors />
 

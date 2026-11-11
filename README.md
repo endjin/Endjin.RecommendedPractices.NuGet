@@ -1,5 +1,9 @@
 # Endjin.RecommendedPractices.NuGet
 
+[![build](https://github.com/endjin/Endjin.RecommendedPractices.NuGet/actions/workflows/build.yml/badge.svg)](https://github.com/endjin/Endjin.RecommendedPractices.NuGet/actions/workflows/build.yml)
+[![Endjin.RecommendedPractices on NuGet](https://img.shields.io/nuget/v/Endjin.RecommendedPractices?label=Endjin.RecommendedPractices)](https://www.nuget.org/packages/Endjin.RecommendedPractices)
+[![Endjin.RecommendedPractices.GitHub on NuGet](https://img.shields.io/nuget/v/Endjin.RecommendedPractices.GitHub?label=Endjin.RecommendedPractices.GitHub)](https://www.nuget.org/packages/Endjin.RecommendedPractices.GitHub)
+
 A NuGet package that configures .NET projects for endjin's recommended engineering practices
 
 **Requirements:** the .NET 10 SDK or later. .NET 10 is the earliest supported version of .NET, and the package stops the build with an error on older SDKs. (You can still target older frameworks, such as `netstandard2.0`, from a supported SDK.)
@@ -33,10 +37,11 @@ When you add a reference to this package via NuGet, it does the following:
 * sets a default copyright notice (if you're not endjin, set the `Copyright` property in your project)
 * configures XML documentation output
 * provides default settings for NuGet package metadata, such as the authors, the package icon, license acceptance and symbol packages
-* makes compiler warnings errors
-* adds the StyleCop.Analyzers and Roslynator.Analyzers code analyzers (set `EndjinDisableCodeAnalysis` to `true` to turn them off)
+* makes warnings errors in Release builds, which is what CI and packaging build (set `TreatWarningsAsErrors` to `true` in your project to make them errors in every configuration)
+* adds the StyleCop.Analyzers, Roslynator.Analyzers and Microsoft.VisualStudio.Threading.Analyzers code analyzers (set `EndjinDisableCodeAnalysis` to `true` to turn them off). The threading analyzers catch async and threading mistakes, such as `async void` methods
 * turns off the more vexing Roslynator and StyleCop rules
-* provides default `stylecop.json` and `.editorconfig` files at the solution level if you don't yet have these
+* requires C# files to end with a newline (the default for most editors and AI coding tools)
+* provides default `stylecop.json`, `.editorconfig` and `PackageIcon.png` files at the solution level if you don't yet have these. The build doesn't depend on these copies: the package supplies the same settings and icon itself, so set `EndjinDisableSolutionLevelFiles` to `true` if you don't want the files (see [ADR 0006](docs/adr/0006-solution-level-files-are-optional.md))
 * detects whether you're building a NuGet package or a non-packaged target, and doesn't require XML documentation in non-packaged targets (unless you ask it to)
 * ensures that if you have a `local.settings.json` file, it is copied to the output folder when it changes
 * checks that projects producing runnable artifacts (such as console apps, test projects and Azure Functions) use `packages.lock.json` files
@@ -56,7 +61,7 @@ The build uses [ZeroFailed](https://github.com/zerofailed/ZeroFailed) and runs i
 
 This runs the Pester specs and packs both packages into `_packages`. The build is configured in [.zf/config.ps1](.zf/config.ps1).
 
-Releases use endjin's [pr-autoflow](https://github.com/endjin/pr-autoflow) process. When a pull request labelled `pending_release` is merged into `main`, [auto_release](.github/workflows/auto_release.yml) tags `main` with the next version. The tag build pushes the packages to nuget.org and creates a GitHub release with the packages attached.
+Releases use endjin's [pr-autoflow](https://github.com/endjin/pr-autoflow) process. When a pull request labelled `pending_release` is merged into `main`, [auto_release](.github/workflows/auto_release.yml) tags `main` with the next version. The tag build pushes the packages to nuget.org and creates a GitHub release with the packages attached. See [Releasing](docs/releasing/Releasing.md) for details, including how to withdraw a bad release.
 
 See the [changelog](CHANGELOG.md) for what changed in each version.
 

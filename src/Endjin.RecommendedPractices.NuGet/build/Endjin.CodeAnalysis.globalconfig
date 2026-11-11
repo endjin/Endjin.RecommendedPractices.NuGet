@@ -19,7 +19,7 @@ is_global = true
 global_level = -1
 
 indent_size = 4
-insert_final_newline = false
+insert_final_newline = true
 
 # Core editorconfig formatting - indentation
 
@@ -95,3 +95,7 @@ dotnet_diagnostic.CA1014.severity = None
 dotnet_diagnostic.CA1032.severity = None
 dotnet_diagnostic.RCS1194.severity = None
 dotnet_diagnostic.CA1303.severity = None
+
+# Use ++ or -- instead of an assignment (e.g. count += 1) - statements that exist only for their
+# side effect read better with an explicit assignment.
+dotnet_diagnostic.RCS1089.severity = None
