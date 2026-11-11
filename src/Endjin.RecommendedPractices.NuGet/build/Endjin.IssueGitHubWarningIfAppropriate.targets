@@ -40,7 +40,15 @@
             <_EndjinGitFolderFound Condition="Exists('$(MSBuildProjectDirectory)/.git') Or Exists('$(MSBuildProjectDirectory)/../.git') Or Exists('$(MSBuildProjectDirectory)/../../.git') Or Exists('$(MSBuildProjectDirectory)/../../../.git') Or Exists('$(MSBuildProjectDirectory)/../../../../.git') Or Exists('$(MSBuildProjectDirectory)/../../../../../.git') Or Exists('$(MSBuildProjectDirectory)/../../../../../../.git')">true</_EndjinGitFolderFound>
         </PropertyGroup>
 
-        <Microsoft.Build.Tasks.Git.LocateRepository Condition="'$(_EndjinGitFolderFound)' == 'true'" Path="$(MSBuildProjectDirectory)" RemoteName="$(GitRepositoryRemoteName)" ConfigurationScope="$(GitRepositoryConfigurationScope)">
+        <!--
+            LocateRepository comes from Microsoft.Build.Tasks.Git, which we don't reference as a
+            package (see the nuspec). It is registered by the .NET SDK's built-in Source Link
+            support (SDK 8.0+), or by a Microsoft.SourceLink.* package if the project references
+            one. Either way, MicrosoftBuildTasksGitAssemblyFile is set when the task is available.
+            If it isn't (older SDK, or SuppressImplicitGitSourceLink with no package), we skip
+            detection rather than fail the build.
+        -->
+        <Microsoft.Build.Tasks.Git.LocateRepository Condition="'$(_EndjinGitFolderFound)' == 'true' And '$(MicrosoftBuildTasksGitAssemblyFile)' != ''" Path="$(MSBuildProjectDirectory)" RemoteName="$(GitRepositoryRemoteName)" ConfigurationScope="$(GitRepositoryConfigurationScope)">
 
             <Output TaskParameter="WorkingDirectory" PropertyName="_EndjinWorkingDirectory" />
             <Output TaskParameter="RepositoryId" PropertyName="_EndjinGitRepositoryId" />
