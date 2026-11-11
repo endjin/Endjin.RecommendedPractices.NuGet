@@ -45,13 +45,14 @@
 
     <!--
         Non-packable projects will not be distributed through NuGet and so in general we don't
-        require all public elements to be documented, so we disable SA1600. Projects that want
-        to keep this can opt out with this setting:
+        require all public elements to be documented, so we disable SA1600 (StyleCop) and CS1591
+        (the compiler's own missing-XML-comment warning, which GenerateDocumentationFile turns on
+        for every project). Projects that want to keep these can opt out with this setting:
 
         <EndjinLeaveWarningsEnabledOnNonPackableProject>true</EndjinLeaveWarningsEnabledOnNonPackableProject>
     -->
     <PropertyGroup Condition="($(IsPackable) == 'false') and ($(EndjinLeaveWarningsEnabledOnNonPackableProject) != 'true')">
-        <NoWarn>$(NoWarn);SA1600</NoWarn>
+        <NoWarn>$(NoWarn);SA1600;CS1591</NoWarn>
     </PropertyGroup>
 
     <!--
