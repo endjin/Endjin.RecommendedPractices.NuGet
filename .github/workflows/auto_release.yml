@@ -3,6 +3,12 @@ on:
   pull_request:
     types: [closed]
 
+# One release evaluation at a time, so two PRs merged close together can't both tag, or tag and
+# unlabel from different snapshots of the default branch. Queued runs wait rather than cancel.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
 jobs:
   lookup_default_branch:
     runs-on: ubuntu-latest
@@ -88,7 +94,11 @@ jobs:
   check_ready_to_release:
     runs-on: ubuntu-latest
     needs: [check_for_norelease_label,lookup_default_branch]
+    # Only a PR that was merged into the default branch can make a release ready. Closing an
+    # unmerged PR, or merging into another branch, doesn't.
     if: |
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.base.ref == needs.lookup_default_branch.outputs.branch_name &&
       needs.check_for_norelease_label.outputs.no_release == 'false'
     outputs:
       no_open_prs: ${{ steps.watch_dependabot_prs.outputs.is_complete }}
@@ -115,11 +125,13 @@ jobs:
           });
           return JSON.stringify(pulls.data.map(p=>p.title))
         result-encoding: string
+    # PR titles are untrusted (they can come from forks), so they are passed through an
+    # environment variable and printed as data, never interpolated into the script.
     - name: Display open_pr_list
+      env:
+        OPEN_PR_LIST: ${{ steps.get_open_pr_list.outputs.result }}
       run: |
-        cat <<EOF
-        open_pr_list : ${{ steps.get_open_pr_list.outputs.result }}
-        EOF
+        printf 'open_pr_list : %s\n' "$OPEN_PR_LIST"
 
     - name: Get 'pending_release' PRs
       id: get_release_pending_pr_list
@@ -128,35 +140,47 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         retries: 6  # final retry should wait 64 seconds
         retry-exempt-status-codes: 400,401,404,422    # GH will raise rate limits with 403 & 429 status codes
+        # The labels are filtered in the search query, and every page of results is read, so no
+        # pending PR is missed however many merged PRs the repository has. Only PRs whose merge
+        # commit is in the default branch HEAD commit captured by lookup_default_branch count: that
+        # is the commit that gets tagged, so a PR merged after it is left for the next release.
         script: |
-          const repoWithOwner = `${context.payload.repository.owner.login}/${context.payload.repository.name}`;
-          const pulls = await github.rest.search.issuesAndPullRequests({
-            q: `is:pr repo:${repoWithOwner} is:merged`,
+          const owner = context.payload.repository.owner.login;
+          const repo = context.payload.repository.name;
+          const headCommit = '${{ needs.lookup_default_branch.outputs.head_commit }}';
+          const candidates = await github.paginate(github.rest.search.issuesAndPullRequests, {
+            q: `is:pr repo:${owner}/${repo} is:merged label:pending_release -label:no_release`,
+            per_page: 100,
           });
-          allPrs = pulls.data.items.map(p=>`#${p.number} '${p.title}' in ${p.repository_url}`);
-          core.info(`allPrs: ${JSON.stringify(allPrs)}`);
+          core.info(`pending_release PRs found: ${JSON.stringify(candidates.map(p => `#${p.number} '${p.title}'`))}`);
 
-          releasePendingPrDetails = pulls.data.items.
-                            filter(function (x) { return x.labels.map(l=>l.name).includes('pending_release') }).
-                            filter(function (x) { return !x.labels.map(l=>l.name).includes('no_release') }).
-                            map(p=>`#${p.number} '${p.title}' in ${p.repository_url}`);
-          core.info(`releasePendingPrDetails: ${JSON.stringify(releasePendingPrDetails)}`);
-
-          const release_pending_prs = pulls.data.items.
-                                        filter(function (x) { return x.labels.map(l=>l.name).includes('pending_release') }).
-                                        filter(function (x) { return !x.labels.map(l=>l.name).includes('no_release') }).
-                                        map(p=>p.number);
+          const release_pending_prs = [];
+          for (const candidate of candidates) {
+            const pr = await github.rest.pulls.get({ owner, repo, pull_number: candidate.number });
+            const comparison = await github.rest.repos.compareCommitsWithBasehead({
+              owner,
+              repo,
+              basehead: `${pr.data.merge_commit_sha}...${headCommit}`,
+            });
+            // 'identical' or 'ahead': the merge commit is the tagged commit or one of its ancestors.
+            if (['identical', 'ahead'].includes(comparison.data.status)) {
+              release_pending_prs.push(candidate.number);
+            } else {
+              core.info(`#${candidate.number} is not in ${headCommit} (${comparison.data.status}); leaving it for the next release`);
+            }
+          }
           core.info(`release_pending_prs: ${JSON.stringify(release_pending_prs)}`);
           core.setOutput('is_release_pending', (release_pending_prs.length > 0));
           return JSON.stringify(release_pending_prs);
         result-encoding: string
 
     - name: Display release_pending_pr_list
+      env:
+        RELEASE_PENDING_PR_LIST: ${{ steps.get_release_pending_pr_list.outputs.result }}
+        IS_RELEASE_PENDING: ${{ steps.get_release_pending_pr_list.outputs.is_release_pending }}
       run: |
-        cat <<EOF
-        release_pending_pr_list : ${{ steps.get_release_pending_pr_list.outputs.result }}
-        EOF
-        echo "is_release_pending : ${{ steps.get_release_pending_pr_list.outputs.is_release_pending }}"
+        printf 'release_pending_pr_list : %s\n' "$RELEASE_PENDING_PR_LIST"
+        printf 'is_release_pending : %s\n' "$IS_RELEASE_PENDING"
 
     - name: Enable long paths
       run: git config --global core.longpaths true
@@ -196,13 +220,16 @@ jobs:
           return ( '${{ steps.is_human_pr.outputs.result }}' == 'true' || '${{ steps.watch_dependabot_prs.outputs.is_complete }}' == 'True') && '${{ steps.get_release_pending_pr_list.outputs.is_release_pending }}' == 'true'
 
     - name: Display job outputs
+      env:
+        NO_OPEN_PRS: ${{ steps.watch_dependabot_prs.outputs.is_complete }}
+        PENDING_RELEASE_PR_LIST: ${{ steps.get_release_pending_pr_list.outputs.result }}
+        IS_HUMAN_PR: ${{ steps.is_human_pr.outputs.result }}
+        READY_TO_RELEASE: ${{ steps.set_ready_for_release.outputs.result }}
       run: |
-        echo "no_open_prs: ${{ steps.watch_dependabot_prs.outputs.is_complete }}"
-        cat <<EOF
-        pending_release_pr_list: ${{ steps.get_release_pending_pr_list.outputs.result }}
-        EOF
-        echo "is_human_pr: ${{ steps.is_human_pr.outputs.result }}"
-        echo "ready_to_release : ${{ steps.set_ready_for_release.outputs.result }}"
+        printf 'no_open_prs: %s\n' "$NO_OPEN_PRS"
+        printf 'pending_release_pr_list: %s\n' "$PENDING_RELEASE_PR_LIST"
+        printf 'is_human_pr: %s\n' "$IS_HUMAN_PR"
+        printf 'ready_to_release : %s\n' "$READY_TO_RELEASE"
 
   tag_for_release:
     runs-on: ubuntu-latest
@@ -222,6 +249,15 @@ jobs:
         # ensure we are creating the release tag on the default branch
         ref: ${{ needs.lookup_default_branch.outputs.branch_name }}
         fetch-depth: 0
+
+    # The branch may have moved on since lookup_default_branch read its HEAD commit. Version the
+    # same commit that gets tagged (and that decided which PRs are released), while keeping a
+    # local branch checked out, which GitVersion needs for its branch configuration.
+    - name: Pin the default branch to the commit being released
+      env:
+        BRANCH_NAME: ${{ needs.lookup_default_branch.outputs.branch_name }}
+        HEAD_COMMIT: ${{ needs.lookup_default_branch.outputs.head_commit }}
+      run: git checkout -B "$BRANCH_NAME" "$HEAD_COMMIT"
 
     - name: Install GitVersion
       run: |
