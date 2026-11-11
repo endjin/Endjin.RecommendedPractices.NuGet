@@ -28,6 +28,26 @@
 
         The minimum supported .NET SDK is enforced by Endjin.VerifySdkVersion.targets.
         -->
+
+        <!--
+        The code analyzers are package dependencies, not PackageReference items in our build
+        targets. NuGet restore doesn't read the build files of the packages it is restoring, so
+        PackageReferences declared there are never restored, and the analyzers never run.
+
+        Because this package is a development dependency, NuGet tooling adds it to projects with
+        PrivateAssets="all". That covers these dependencies too: the analyzers run when the
+        consuming project compiles, but they don't flow to projects that reference it, or into
+        any package it produces. Endjin.Common.Net.targets fails the pack of a project whose
+        reference to this package is missing PrivateAssets="all".
+
+        Bare version numbers mean "this version or higher", so consumers can move ahead of us.
+        Setting EndjinDisableCodeAnalysis to true removes these analyzers from compilation
+        (see Endjin.Common.Net.targets).
+        -->
+        <dependencies>
+            <dependency id="StyleCop.Analyzers" version="1.3.180" />
+            <dependency id="Roslynator.Analyzers" version="5.0.1" />
+        </dependencies>
     </metadata>
 
     <files>

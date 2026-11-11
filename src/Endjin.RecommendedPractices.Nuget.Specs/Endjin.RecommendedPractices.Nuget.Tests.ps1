@@ -71,4 +71,47 @@ Describe 'Packaging tests' {
     It 'should create a snupkg file for the MultiFramework project' {
         (Join-Path $packageOutputDir "MultiFramework.0.0.1-local.snupkg") | Should -Exist
     }
+
+    It 'should not make the SingleFramework package depend on the development-only packages' {
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        $zip = [System.IO.Compression.ZipFile]::OpenRead((Join-Path $packageOutputDir "SingleFramework.0.0.1-local.nupkg"))
+        try {
+            $entry = $zip.Entries | Where-Object { $_.FullName -eq 'SingleFramework.nuspec' }
+            $reader = New-Object System.IO.StreamReader($entry.Open())
+            $nuspec = $reader.ReadToEnd()
+            $reader.Dispose()
+        }
+        finally {
+            $zip.Dispose()
+        }
+
+        $nuspec | Should -Not -Match 'id="Endjin\.RecommendedPractices'
+        $nuspec | Should -Not -Match 'id="StyleCop\.Analyzers"'
+        $nuspec | Should -Not -Match 'id="Roslynator\.Analyzers"'
+    }
+}
+
+Describe 'Code analyzer tests' {
+
+    function Get-AnalyzerPackageIds {
+        param ([string[]] $extraArguments)
+
+        # ResolveLockFileAnalyzers produces the Analyzer items that are passed to the compiler,
+        # after the package's opt-out target (if enabled) has removed any.
+        $json = dotnet msbuild (Join-Path $specsSlnDir "SingleFramework/SingleFramework.csproj") -nologo -tl:off -t:ResolveLockFileAnalyzers -getItem:Analyzer /p:Configuration=Release @extraArguments
+        $items = ($json | Out-String | ConvertFrom-Json).Items.Analyzer
+        @($items | ForEach-Object { $_.NuGetPackageId } | Sort-Object -Unique)
+    }
+
+    It 'should pass the StyleCop and Roslynator analyzers to the compiler' {
+        $ids = Get-AnalyzerPackageIds @()
+        $ids | Should -Contain 'StyleCop.Analyzers'
+        $ids | Should -Contain 'Roslynator.Analyzers'
+    }
+
+    It 'should remove the StyleCop and Roslynator analyzers when EndjinDisableCodeAnalysis is true' {
+        $ids = Get-AnalyzerPackageIds @('/p:EndjinDisableCodeAnalysis=true')
+        $ids | Should -Not -Contain 'StyleCop.Analyzers'
+        $ids | Should -Not -Contain 'Roslynator.Analyzers'
+    }
 }

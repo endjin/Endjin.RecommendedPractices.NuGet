@@ -15,7 +15,7 @@ When you add a reference to this package via NuGet, it does the following:
 * provides default stylecop.json and .editorconfig files at the solution level if you don't yet have theses
 * detects whether you're building for a NuGet package or a non-packaged target, and adjusts the warning set slightly accordingly (unless you ask it not to)
 * ensures that if you have a local.setting.json it's configured to be copied to the output folder if it changes
-* adds a reference to StyleCop.Analyzers
+* adds the StyleCop.Analyzers and Roslynator.Analyzers code analyzers (set `EndjinDisableCodeAnalysis` to `true` to turn them off)
 
 The set of code analysis rules will gradually change because the .NET SDK incorporates new ones over time. If you want to pin to a particular era of rules, you can set the `EnableNETAnalyzers` build property to false, and then add a reference to the [`Microsoft.CodeAnalysis.NetAnalyzers` NuGet package](https://www.nuget.org/packages/Microsoft.CodeAnalysis.NetAnalyzers) instead.
 
