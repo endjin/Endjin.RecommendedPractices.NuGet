@@ -22,8 +22,13 @@
         <Copy Condition="($(EndjinDisableCodeAnalysis) != 'true') and (!Exists('$(SolutionDir)stylecop.json'))" SourceFiles="$(MSBuildThisFileDirectory)stylecop.json" DestinationFiles="$(SolutionDir)stylecop.json" />
     </Target>
 
+    <!--
+        The package ships the default as default.editorconfig, not .editorconfig, because
+        "dotnet pack" always leaves out files whose names start with a dot. It is copied to
+        the solution folder under its real name.
+    -->
     <Target Name="_EndjinEnsureEditorConfig" AfterTargets="BeforeBuild" BeforeTargets="CoreBuild">
-        <Copy Condition="($(EndjinDisableCreateEditorConfig) != 'true') and (!Exists('$(SolutionDir).editorconfig'))" SourceFiles="$(MSBuildThisFileDirectory)/.editorconfig" DestinationFiles="$(SolutionDir).editorconfig" />
+        <Copy Condition="($(EndjinDisableCreateEditorConfig) != 'true') and (!Exists('$(SolutionDir).editorconfig'))" SourceFiles="$(MSBuildThisFileDirectory)default.editorconfig" DestinationFiles="$(SolutionDir).editorconfig" />
     </Target>
 
     <!--
