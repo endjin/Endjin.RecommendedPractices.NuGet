@@ -9,10 +9,21 @@
         <description>Applies endjin standard practices to a .NET project hosted in GitHub.</description>
         <authors>endjin</authors>
         <icon>images\EndjinIcon.png</icon>
+        <license type="expression">Apache-2.0</license>
+        <projectUrl>https://github.com/endjin/Endjin.RecommendedPractices.NuGet</projectUrl>
+        <repository type="git" url="https://github.com/endjin/Endjin.RecommendedPractices.NuGet.git" />
+        <releaseNotes>See https://github.com/endjin/Endjin.RecommendedPractices.NuGet/blob/main/CHANGELOG.md</releaseNotes>
 
         <developmentDependency>true</developmentDependency>
+        <!--
+        No dependency on Microsoft.SourceLink.GitHub: the .NET SDK has Source Link for GitHub
+        built in, matched to the SDK version in use. Referencing the package would switch that
+        off and tie every consumer to the MSBuild version the package was built for.
+        Endjin.Common.GitHub.targets warns if Source Link is unavailable. Projects that need a
+        specific Source Link version can still add their own PackageReference to
+        Microsoft.SourceLink.GitHub.
+        -->
         <dependencies>
-            <dependency id="Microsoft.SourceLink.GitHub" version="1.1.1" />
             <dependency id="Endjin.RecommendedPractices" version="$version$" />
         </dependencies>
     </metadata>

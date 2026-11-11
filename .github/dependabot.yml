@@ -1,0 +1,13 @@
+version: 2
+updates:
+# GitHub Actions used by the workflows. Updates to actions/* are auto-merged (.github/config/pr-autoflow.json).
+#
+# There is no NuGet entry. The package versions this repository ships (StyleCop.Analyzers and
+# Roslynator.Analyzers) are dependencies in src/Endjin.RecommendedPractices.NuGet/Endjin.RecommendedPractices.nuspec,
+# which are updated by hand. The only .csproj files are the specs projects, which reference this
+# repository's own packages at the locally built version 0.0.1-local.
+- package-ecosystem: github-actions
+  directory: /
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 10

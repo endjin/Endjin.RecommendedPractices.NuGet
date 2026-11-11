@@ -9,7 +9,7 @@
     enable it in your project file.
 -->
 
-<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="_EndjinCheckImport">
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Target Name="_EndjinConfigureAutoPackagesLock" BeforeTargets="CollectPackageReferences">
     <PropertyGroup Condition="($(EndjinAutoPackagesLock) == 'true')">
       <_EndjinAutoPackagesLock>true</_EndjinAutoPackagesLock>
@@ -18,7 +18,7 @@
       <_EndjinAutoPackagesLock>false</_EndjinAutoPackagesLock>
     </PropertyGroup>
     <PropertyGroup Condition="($(_EndjinAutoPackagesLock) == '')">
-      <_EndjinAutoPackagesLock Condition="($(OutputType) == 'Exe') or ($(OutputType) == 'Exe')">true</_EndjinAutoPackagesLock>
+      <_EndjinAutoPackagesLock Condition="($(OutputType) == 'Exe') or ($(OutputType) == 'WinExe')">true</_EndjinAutoPackagesLock>
       <_EndjinAutoPackagesLock Condition="($(OutputType) == 'Library') and ($(AzureFunctionsVersion) != '')">true</_EndjinAutoPackagesLock>
      </PropertyGroup>
     <PropertyGroup Condition="$(_EndjinAutoPackagesLock) == 'true'">

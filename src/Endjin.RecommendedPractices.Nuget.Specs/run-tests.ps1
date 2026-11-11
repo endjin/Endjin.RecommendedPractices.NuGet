@@ -1,18 +1,27 @@
 $ErrorActionPreference = 'Stop'
 $here = Split-Path -Parent $PSCommandPath
-$pesterVer = '4.10.1'
+$pesterVer = '6.2.0'
 
 try {
     [array]$existingModule = Get-Module -ListAvailable Pester
     if (!$existingModule -or ($existingModule.Version -notcontains $pesterVer)) {
-        # Build agents now have v5.6.1 of Pester installed, which has a different publisher
-        # than earlier versions. This means that the -SkipPublisherCheck flag is required to
-        # avoid the error "not matching with the authenticode issuer" error.
+        # Pester 5 and later are signed by a different publisher than the Pester 3.4 that ships
+        # with Windows, so -SkipPublisherCheck is required to avoid the
+        # "not matching with the authenticode issuer" error.
         # REF: https://github.com/pester/Pester/issues/2438
         Install-Module Pester -RequiredVersion $pesterVer -Force -Scope CurrentUser -SkipPublisherCheck
     }
-    Import-Module Pester
-    $results = Invoke-Pester $here -PassThru
+    Import-Module Pester -RequiredVersion $pesterVer
+
+    $config = New-PesterConfiguration
+    $config.Run.Path = $here
+    $config.Run.PassThru = $true
+    $config.Output.Verbosity = 'Detailed'
+    # The GitHub Actions build publishes files matching '**/*-test-results.xml' as test results.
+    $config.TestResult.Enabled = $true
+    $config.TestResult.OutputFormat = 'NUnitXml'
+    $config.TestResult.OutputPath = Join-Path $here "pester-test-results.xml"
+    $results = Invoke-Pester -Configuration $config
 
     if ($results.FailedCount -gt 0) {
         Write-Host ("{0} out of {1} tests failed - check previous logging for more details" -f $results.FailedCount, $results.TotalCount)

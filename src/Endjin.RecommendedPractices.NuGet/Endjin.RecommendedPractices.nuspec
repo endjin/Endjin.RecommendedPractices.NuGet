@@ -9,20 +9,50 @@
         <description>Applies endjin standard practices to a .NET project.</description>
         <authors>endjin</authors>
         <icon>images\EndjinIcon.png</icon>
+        <license type="expression">Apache-2.0</license>
+        <projectUrl>https://github.com/endjin/Endjin.RecommendedPractices.NuGet</projectUrl>
+        <repository type="git" url="https://github.com/endjin/Endjin.RecommendedPractices.NuGet.git" />
+        <releaseNotes>See https://github.com/endjin/Endjin.RecommendedPractices.NuGet/blob/main/CHANGELOG.md</releaseNotes>
 
         <developmentDependency>true</developmentDependency>
+        <!--
+        As of v2, we no longer presume use of GitHub. However, we want to detect when a project
+        is using GitHub but has not switched to the Endjin.RecommendedPractices.GitHub package.
+        In most cases, we expect that to be a mistake caused by developers not knowing that
+        when they upgrade from v1 to v2, they need to change the reference if they want the
+        same behaviour. We want to issue a warning when this seems to have happened.
+
+        To detect when a project is hosted on GitHub, Endjin.IssueGitHubWarningIfAppropriate.targets
+        reads the repository's Git configuration in MSBuild, so it needs no task assembly. We
+        deliberately take no dependency on Microsoft.Build.Tasks.Git or Microsoft.SourceLink.*:
+        each version of those only loads on the MSBuild it was built for, and referencing any
+        Source Link package switches off the .NET SDK's built-in Source Link, which matches the
+        SDK in use.
+
+        The minimum supported .NET SDK is enforced by Endjin.VerifySdkVersion.targets.
+        -->
+
+        <!--
+        The code analyzers (StyleCop, Roslynator, and the Microsoft.VisualStudio.Threading
+        analyzers, which catch async and threading mistakes such as async void methods) are
+        package dependencies, not PackageReference items in our build
+        targets. NuGet restore doesn't read the build files of the packages it is restoring, so
+        PackageReferences declared there are never restored, and the analyzers never run.
+
+        Because this package is a development dependency, NuGet tooling adds it to projects with
+        PrivateAssets="all". That covers these dependencies too: the analyzers run when the
+        consuming project compiles, but they don't flow to projects that reference it, or into
+        any package it produces. Endjin.Common.Net.targets fails the pack of a project whose
+        reference to this package is missing PrivateAssets="all".
+
+        Bare version numbers mean "this version or higher", so consumers can move ahead of us.
+        Setting EndjinDisableCodeAnalysis to true removes these analyzers from compilation
+        (see Endjin.Common.Net.targets).
+        -->
         <dependencies>
-            <!--
-            As of v2, we no longer presume use of GitHub. However, we want to detect when a project
-            is using GitHub but has not switched to the Endjin.RecommendedPractices.GitHub package.
-            In most cases, we expect that to be a mistake caused by developers not knowing that
-            when they upgrade from v1 to v2, they need to change the reference if they want the
-            same behaviour. We want to issue a warning when this seems to have happened.
-            To be able to detect when a project is hosted on GitHub, we use the tasks package
-            that the GitHub sourcelink packages also use. This is a development dependency, so
-            it doesn't have any impact on project output.
-            -->
-            <dependency id="Microsoft.Build.Tasks.Git" version="1.1.1" />
+            <dependency id="StyleCop.Analyzers" version="1.3.180" />
+            <dependency id="Roslynator.Analyzers" version="5.0.1" />
+            <dependency id="Microsoft.VisualStudio.Threading.Analyzers" version="18.12.1" />
         </dependencies>
     </metadata>
 

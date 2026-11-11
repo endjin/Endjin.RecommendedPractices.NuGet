@@ -56,8 +56,33 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
-  <PropertyGroup>
+  <!--
+    Warnings are errors in Release builds only. That still stops code with warnings from being
+    merged, because CI and packaging build Release (dotnet pack and dotnet publish default to
+    Release), but it lets developers experiment in Debug builds without first having to satisfy
+    every analyzer.
+
+    Configuration is only known here when it is passed in (dotnet build -c Release, Visual Studio,
+    dotnet pack): the .NET SDK sets its Debug default after this file. When it's Release, we set
+    TreatWarningsAsErrors to true here, so that anything derived from it early in the build sees
+    the final value.
+
+    A project can also choose its configuration in its own file, after this. For that case, if
+    nothing has set TreatWarningsAsErrors yet, we note that the decision is ours to make, and
+    Endjin.Common.Net.targets makes it once the final configuration is known.
+
+    A value set in Directory.Build.props, on the command line, in the project file, or in
+    Directory.Build.targets is always kept. So you can make warnings errors in every configuration
+    with:
+
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  -->
+  <PropertyGroup Condition="'$(TreatWarningsAsErrors)' == ''">
+    <_EndjinDecidesTreatWarningsAsErrors>true</_EndjinDecidesTreatWarningsAsErrors>
+    <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <TreatSpecificWarningsAsErrors />
     <WarningsAsErrors />
 
@@ -70,6 +95,29 @@
 
   <ItemGroup Condition="($(EndjinDisableCodeAnalysis) != 'true') and (Exists('$(SolutionDir)stylecop.json'))">
     <AdditionalFiles Include="$(SolutionDir)stylecop.json" Link="stylecop.json" />
+  </ItemGroup>
+
+  <!--
+    On the first build of a clean checkout, the solution-level stylecop.json doesn't exist yet
+    when the project is evaluated: Endjin.Common.Net.targets only copies it into place during
+    the build. Without settings, StyleCop falls back to its defaults (e.g. the company name
+    "PlaceholderCompany"), so rules such as SA1636 fail every file header. So until the
+    solution has its own copy, we give StyleCop the package's copy, which has the same contents.
+  -->
+  <ItemGroup Condition="($(EndjinDisableCodeAnalysis) != 'true') and (!Exists('$(SolutionDir)stylecop.json'))">
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json" Link="stylecop.json" />
+  </ItemGroup>
+
+  <!--
+    The same first-build problem applies to .editorconfig, and a fallback copy can't fix it: an
+    .editorconfig only applies to files in or below its own folder. So the C# settings from the
+    default .editorconfig are also supplied as a global analyzer config, which applies to every
+    file in the compilation. Any .editorconfig (including the copied one) overrides it, so it only
+    makes a difference until the solution has its own .editorconfig. See the file for details.
+    Setting EndjinDisableCreateEditorConfig to true turns off both.
+  -->
+  <ItemGroup Condition="$(EndjinDisableCreateEditorConfig) != 'true'">
+    <GlobalAnalyzerConfigFiles Include="$(MSBuildThisFileDirectory)Endjin.CodeAnalysis.globalconfig" />
   </ItemGroup>
 
 </Project>

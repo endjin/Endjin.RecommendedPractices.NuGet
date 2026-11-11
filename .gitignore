@@ -351,3 +351,13 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+
+# ZeroFailed build
+.zf/.cache/
+.zf/extensions/
+_codeCoverage/
+_packages/
+_local-nuget-feed/
+github-release-artefacts.log
+dotnet-*.log
+pester-test-results.xml

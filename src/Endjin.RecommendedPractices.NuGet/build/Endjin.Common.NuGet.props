@@ -27,15 +27,22 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <Deterministic>true</Deterministic>
-    <!-- https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml#system-variables -->
-    <ContinuousIntegrationBuild Condition="'$(TF_BUILD)' == 'true'">True</ContinuousIntegrationBuild>
+    <!--
+      ContinuousIntegrationBuild makes the build deterministic for CI (for example, source paths in
+      PDBs are normalized so Source Link works), and Endjin.AutoPackagesLock.targets uses it to
+      require RestoreLockedMode. The .NET SDK doesn't set it, so we do when we recognize a CI server:
+      TF_BUILD is set by Azure Pipelines, and GITHUB_ACTIONS by GitHub Actions.
+      https://learn.microsoft.com/en-us/azure/devops/pipelines/build/variables#system-variables
+      https://docs.github.com/en/actions/reference/workflows-and-actions/variables#default-environment-variables
+    -->
+    <ContinuousIntegrationBuild Condition="'$(ContinuousIntegrationBuild)' == '' And ('$(TF_BUILD)' == 'true' Or '$(GITHUB_ACTIONS)' == 'true')">true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
     <!--
       PackageIconUrl has been deprecated by NuGet, so we need to use <PackageIcon>.
 
       The Endjin.RecommendedPractices NuGet package presumes that the icon lives in
-      the parent directory, and is called PackageIcon.png. You can disable this
+      the solution folder, and is called PackageIcon.png. You can disable this
       presumption by setting this property:
 
       <EndjinDisableDefaultPackageIconInclusion>true</EndjinDisableDefaultPackageIconInclusion>
@@ -70,16 +77,13 @@
 
   <ItemGroup Condition="($(IsPackable) != 'false') and ($(EndjinDisableDefaultPackageIconInclusion) != 'true') and (Exists('$(SolutionDir)PackageIcon.png'))">
     <!--
-      We can't use $(SolutionDir) because that's set to the normal solution folder in "dotnet pack"
-      builds, because the Azure DevOps dotnet task runs "dotnet pack" once for each csproj instead
-      of for the whole solution. So we just have to presume it's in the parent folder. In cases
-      where that's not true, prjects can set
-
-      <EndjinDisableDefaultPackageIconInclusion>true</EndjinDisableDefaultPackageIconInclusion>
-
-      and add the package icon themselves.
+      Use the same path as the condition above, and as the target that copies the default icon
+      (Endjin.Common.Net.targets). When a single project is built or packed on its own, the build
+      system doesn't set SolutionDir, and Endjin.Common.Net.props sets it to the project's parent
+      folder. That's why Endjin.RecommendedPractices.props imports Endjin.Common.Net.props before
+      this file.
     -->
-    <None Include="../PackageIcon.png" Pack="true" PackagePath="\"/>
+    <None Include="$(SolutionDir)PackageIcon.png" Link="PackageIcon.png" Pack="true" PackagePath="\"/>
   </ItemGroup>
 
 </Project>

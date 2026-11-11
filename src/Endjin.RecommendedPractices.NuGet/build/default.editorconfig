@@ -1,12 +1,16 @@
-# Note: this file was added to your solution as a result of one or more projects using the Endjin.RecommendedPractices.Build.Common NuGet package.
+# Note: this file was added to your solution as a result of one or more projects using the Endjin.RecommendedPractices NuGet package.
 # You can edit this file (e.g., to remove these comments), and it will not be updated - the package just checks for its presence, and copies
 # this file. If you don't want this file (but you want to use the NuGet package that puts it here), add this setting to all projects
-# using Endjin.RecommendedPractices.Build.Common:
-#  <EndjinDisableCodeAnalysis>true</EndjinDisableCodeAnalysis>
+# using Endjin.RecommendedPractices:
+#  <EndjinDisableCreateEditorConfig>true</EndjinDisableCreateEditorConfig>
 # and then delete this file. That setting will prevent the package from recreating this file.
 
 # Code style rules for enforcing the endjin house style
 # See: https://docs.microsoft.com/en-us/visualstudio/ide/editorconfig-code-style-settings-reference
+#
+# The package also applies the C# settings below through a global analyzer config
+# (Endjin.CodeAnalysis.globalconfig in the package), so that they apply from the very first build.
+# Settings in this file override that, so you can change any of them here.
 
 # XML project files
 [*.{csproj,vbproj,vcxproj,vcxproj.filters,proj,projitems,shproj}]
@@ -19,7 +23,7 @@ indent_size = 2
 # C# files
 [*.{cs,csx}]
 indent_size = 4
-insert_final_newline  = false
+insert_final_newline = true
 
 # Core editorconfig formatting - indentation
 
@@ -35,7 +39,7 @@ csharp_indent_switch_labels = true
 
 csharp_new_line_before_catch = true
 csharp_new_line_before_else = true
-csharp_new_line_before_open_brace = object_collection, object_collection_array_initalizers, accessors, lambdas, control_blocks, methods, properties, types
+csharp_new_line_before_open_brace = object_collection, object_collection_array_initializers, accessors, lambdas, control_blocks, methods, properties, types
 
 # Formatting - spacing options
 
@@ -109,3 +113,7 @@ dotnet_diagnostic.RCS1194.severity = None
 
 # Localize string constants - apps that want localization can turn this back on
 dotnet_diagnostic.CA1303.severity = None
+
+# Use ++ or -- instead of an assignment (e.g. count += 1) - statements that exist only for their
+# side effect read better with an explicit assignment.
+dotnet_diagnostic.RCS1089.severity = None

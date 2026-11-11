@@ -31,8 +31,9 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <Import Project="$(MSBuildThisFileDirectory)Endjin.Common.Copyright.props" />
-  <Import Project="$(MSBuildThisFileDirectory)Endjin.Common.NuGet.props" />
+  <!-- Endjin.Common.Net.props sets SolutionDir if the build system hasn't, and Endjin.Common.NuGet.props uses it. -->
   <Import Project="$(MSBuildThisFileDirectory)Endjin.Common.Net.props" />
+  <Import Project="$(MSBuildThisFileDirectory)Endjin.Common.NuGet.props" />
 
   <PropertyGroup>
     <EndjinProjectPropsPath>$(MSBuildThisFileDirectory)Endjin.Project.props</EndjinProjectPropsPath>

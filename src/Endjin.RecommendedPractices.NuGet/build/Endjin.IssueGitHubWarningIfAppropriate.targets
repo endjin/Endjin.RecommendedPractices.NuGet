@@ -1,25 +1,37 @@
 <!--
-    In V1, we always added an implicit reference to the GitHub sourcelink components. As of V2, we
-    support use in projects that are not in GitHub. However, we anticipate that most V1->V2
-    migrations will want to keep GitHub sourcelink, so we want to make it hard to lose that by
-    accident. Developers will need to change their reference from Endjin.RecommendedPractices to
-    Endjin.RecommendedPractices.GitHub to retain the behaviour they had from V1, and we want to
-    warn them if they appear not to have noticed.
+    In V1, we always added an implicit reference to the GitHub Source Link components. In V2, the
+    GitHub-specific behaviour moved to the Endjin.RecommendedPractices.GitHub package, so that this
+    package can be used in projects that are not on GitHub.
 
-    So this file adds mechanisms to detect when GitHub is in use. If it is, and if the project
-    is not using Endjin.RecommendedPractices.GitHub, then unless the developer has set the
-    EndjinDisableGitHubSourceLinkWarning property to true, we will issue a warning suggesting
-    they change their reference to Endjin.RecommendedPractices.GitHub.
+    As of V3, Source Link comes from the .NET SDK, whichever of the two packages a project uses.
+    What the GitHub package still adds is package metadata from the GitHub repository: the
+    repository type, the project URL, and release notes that link to the GitHub releases.
+
+    So this file detects when GitHub is in use. If it is, and if the project is not using
+    Endjin.RecommendedPractices.GitHub, then unless the developer has set the
+    EndjinDisableGitHubSourceLinkWarning property to true, we issue a warning suggesting they
+    change their reference to Endjin.RecommendedPractices.GitHub. (The property name dates from
+    V2, when the warning was about Source Link.)
 
     The work we need to do for this warning produces some outputs that are potentially useful.
-    These will be set by the EndjinDetectGitHub task, so consumers of this package that want
-    to use these should only do so in tasks that depend on EndjinDetectGitHub.
+    These will be set by the EndjinDetectGitHub target, so consumers of this package that want
+    to use these should only do so in targets that depend on EndjinDetectGitHub.
 
-        EndjinProjectIsInGitRepo        true if the project is in a folder associated with a Git repo
-        EndjinProjectIsInGitHubRepo     true if the project is in a folder associated with a Git repo
-        EndjinGitHubUrl                 The URL of the GitHub project
+        EndjinProjectIsInGitRepo        true if the project is in a Git repo, otherwise false
+        EndjinRepositoryRoot            The root folder of the Git working tree (with a trailing slash), if in a Git repo
+        EndjinProjectIsInGitHubRepo     true if the project is in a Git repo whose remote is on GitHub, otherwise false
+        EndjinGitHubUrl                 The URL of the GitHub project (https://github.com/org/project)
         EndjinGitHubOrg                 The GitHub organization/account name
         EndjinGitHubProject             The GitHub project name
+
+    Detection reads the repository's Git configuration directly, in MSBuild, rather than using
+    a task. (Earlier versions used the LocateRepository task from Microsoft.Build.Tasks.Git,
+    which warns when the project isn't in a Git repo, and so needed a workaround that only
+    looked six folders up for a .git folder.) It finds the nearest .git folder (a normal clone)
+    or .git file (a worktree or submodule) above the project, at any depth, and reads the URL
+    of the remote named by GitRepositoryRemoteName (origin by default, the same default as
+    Source Link), or of the first remote if there's no such remote. It doesn't apply url.*.insteadOf
+    rewrites or settings from global Git configuration.
 -->
 
 <Project ToolsVersion="14.0"
@@ -27,49 +39,80 @@
     InitialTargets="_EndjinIssueGitHubWarningIfAppropriate">
 
     <Target Name="EndjinDetectGitHub">
+        <!--
+            Find the repository. A normal clone has a .git folder (found here by its HEAD file);
+            a worktree or a submodule has a .git file that points to the real Git folder. The
+            nearest of the two (the longest path) is the repository the project is in.
+        -->
         <PropertyGroup>
+            <_EndjinGitFolderRoot>$([MSBuild]::GetDirectoryNameOfFileAbove('$(MSBuildProjectDirectory)', '.git/HEAD'))</_EndjinGitFolderRoot>
+            <_EndjinGitFileRoot>$([MSBuild]::GetDirectoryNameOfFileAbove('$(MSBuildProjectDirectory)', '.git'))</_EndjinGitFileRoot>
+            <_EndjinGitDir Condition="'$(_EndjinGitFolderRoot)' != '' And $(_EndjinGitFolderRoot.Length) &gt;= $(_EndjinGitFileRoot.Length)">$([System.IO.Path]::Combine('$(_EndjinGitFolderRoot)', '.git'))</_EndjinGitDir>
+        </PropertyGroup>
+
+        <!-- A .git file contains "gitdir: <path>", where the path may be relative to the file's folder. -->
+        <PropertyGroup Condition="'$(_EndjinGitDir)' == '' And '$(_EndjinGitFileRoot)' != ''">
+            <_EndjinGitFileContent>$([System.IO.File]::ReadAllText('$(_EndjinGitFileRoot)/.git').Trim())</_EndjinGitFileContent>
+            <_EndjinGitDir Condition="$(_EndjinGitFileContent.StartsWith('gitdir:'))">$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine('$(_EndjinGitFileRoot)', $(_EndjinGitFileContent.Substring(7).Trim())))))</_EndjinGitDir>
+        </PropertyGroup>
+
+        <!-- The working tree's root: the folder holding the .git folder or file that was used. -->
+        <PropertyGroup Condition="'$(_EndjinGitDir)' != ''">
+            <EndjinRepositoryRoot Condition="'$(_EndjinGitFolderRoot)' != '' And $(_EndjinGitFolderRoot.Length) &gt;= $(_EndjinGitFileRoot.Length)">$([MSBuild]::EnsureTrailingSlash('$(_EndjinGitFolderRoot)'))</EndjinRepositoryRoot>
+            <EndjinRepositoryRoot Condition="'$(EndjinRepositoryRoot)' == ''">$([MSBuild]::EnsureTrailingSlash('$(_EndjinGitFileRoot)'))</EndjinRepositoryRoot>
+        </PropertyGroup>
+
+        <!--
+            A worktree's Git folder has a commondir file pointing to the main Git folder, which
+            holds the shared config. A submodule's Git folder has its own config.
+        -->
+        <PropertyGroup Condition="'$(_EndjinGitDir)' != ''">
+            <_EndjinGitCommonDir>$(_EndjinGitDir)</_EndjinGitCommonDir>
+            <_EndjinGitCommonDir Condition="Exists('$(_EndjinGitDir)/commondir')">$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine('$(_EndjinGitDir)', $([System.IO.File]::ReadAllText('$(_EndjinGitDir)/commondir').Trim())))))</_EndjinGitCommonDir>
+            <_EndjinGitConfigFile>$([System.IO.Path]::Combine('$(_EndjinGitCommonDir)', 'config'))</_EndjinGitConfigFile>
+        </PropertyGroup>
+
+        <!-- The remote's URL: the named remote (origin by default), or else the first remote. -->
+        <PropertyGroup Condition="'$(_EndjinGitConfigFile)' != '' And Exists('$(_EndjinGitConfigFile)')">
+            <_EndjinGitConfig>$([System.IO.File]::ReadAllText('$(_EndjinGitConfigFile)'))</_EndjinGitConfig>
+            <_EndjinGitRemoteName>$(GitRepositoryRemoteName)</_EndjinGitRemoteName>
+            <_EndjinGitRemoteName Condition="'$(_EndjinGitRemoteName)' == ''">origin</_EndjinGitRemoteName>
+            <_EndjinUrl>$([System.Text.RegularExpressions.Regex]::Match($(_EndjinGitConfig), `\[remote\s+"$([System.Text.RegularExpressions.Regex]::Escape($(_EndjinGitRemoteName)))"\][^\[]*?\burl\s*=\s*(\S+)`).Groups[1].Value)</_EndjinUrl>
+            <_EndjinUrl Condition="'$(_EndjinUrl)' == ''">$([System.Text.RegularExpressions.Regex]::Match($(_EndjinGitConfig), `\[remote\s+"[^"]*"\][^\[]*?\burl\s*=\s*(\S+)`).Groups[1].Value)</_EndjinUrl>
+        </PropertyGroup>
+
+        <PropertyGroup>
+            <EndjinProjectIsInGitRepo Condition="'$(_EndjinGitConfig)' != ''">true</EndjinProjectIsInGitRepo>
+            <EndjinProjectIsInGitRepo Condition="'$(EndjinProjectIsInGitRepo)' == ''">false</EndjinProjectIsInGitRepo>
+
             <!--
-                Ideally we wouldn't need this hack.
-                Having worked out how to use the LocateRepository it became apparent that
-                there's no way to prevent it from issuing a warning in the case where there's
-                no GitHub repo. Unfortunately, that's exactly the new scenario we're looking
-                to support with this file in Endjin.RecommendedPractices v2.
-                So we use this rather grotty hack to try to locate the .git folder, and only
-                invoke the LocateRepository task (which extracts all the info) if it's there.
+                GitHub remote URLs come in these forms (each optionally ending in .git):
+                    https://github.com/org/project        https://user@github.com/org/project
+                    git@github.com:org/project            ssh://git@github.com/org/project
             -->
-            <_EndjinGitFolderFound Condition="Exists('$(MSBuildProjectDirectory)/.git') Or Exists('$(MSBuildProjectDirectory)/../.git') Or Exists('$(MSBuildProjectDirectory)/../../.git') Or Exists('$(MSBuildProjectDirectory)/../../../.git') Or Exists('$(MSBuildProjectDirectory)/../../../../.git') Or Exists('$(MSBuildProjectDirectory)/../../../../../.git') Or Exists('$(MSBuildProjectDirectory)/../../../../../../.git')">true</_EndjinGitFolderFound>
+            <_EndjinGitHubUrlPattern>^(?:https?://(?:[^@/]+@)?|ssh://(?:[^@/]+@)?|[^@/:]+@)github\.com[:/]([^/]+)/([^/]+?)(?:\.git)?/?$</_EndjinGitHubUrlPattern>
+            <EndjinProjectIsInGitHubRepo Condition="'$(_EndjinUrl)' != '' And $([System.Text.RegularExpressions.Regex]::IsMatch($(_EndjinUrl), $(_EndjinGitHubUrlPattern)))">true</EndjinProjectIsInGitHubRepo>
+            <!-- Not GitHub, or not a Git repo at all. -->
+            <EndjinProjectIsInGitHubRepo Condition="'$(EndjinProjectIsInGitHubRepo)' == ''">false</EndjinProjectIsInGitHubRepo>
         </PropertyGroup>
 
-        <Microsoft.Build.Tasks.Git.LocateRepository Condition="'$(_EndjinGitFolderFound)' == 'true'" Path="$(MSBuildProjectDirectory)" RemoteName="$(GitRepositoryRemoteName)" ConfigurationScope="$(GitRepositoryConfigurationScope)">
-
-            <Output TaskParameter="WorkingDirectory" PropertyName="_EndjinWorkingDirectory" />
-            <Output TaskParameter="RepositoryId" PropertyName="_EndjinGitRepositoryId" />
-            <Output TaskParameter="Url" PropertyName="_EndjinUrl" />
-            <!-- <Output TaskParameter="RevisionId" PropertyName="SourceRevisionId" Condition="'$(SourceRevisionId)' == ''" /> -->
-        </Microsoft.Build.Tasks.Git.LocateRepository>
-        <PropertyGroup>
-            <EndjinProjectIsInGitRepo Condition="'$(_EndjinWorkingDirectory)'!=''">true</EndjinProjectIsInGitRepo>
-            <EndjinProjectIsInGitRepo Condition="'$(EndjinProjectIsInGitRepo)'==''">false</EndjinProjectIsInGitRepo>
-        </PropertyGroup>
-
-        <PropertyGroup Condition="'$(EndjinProjectIsInGitRepo)'=='true'">
-            <EndjinProjectIsInGitHubRepo Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(_EndjinUrl), `(https://|ssh://[^@]*@)github.com/([^/]*)/([^/]*)`))">true</EndjinProjectIsInGitHubRepo>
-            <EndjinProjectIsInGitHubRepo Condition="'$(EndjinProjectIsInGitRepo)'==''">false</EndjinProjectIsInGitHubRepo>
-        </PropertyGroup>
-
-        <PropertyGroup Condition="'$(EndjinProjectIsInGitHubRepo)'=='true'">
-            <EndjinGitHubUrl>$(_EndjinUrl)</EndjinGitHubUrl>
-            <EndjinGitHubOrg>$([System.Text.RegularExpressions.Regex]::Match($(_EndjinUrl), `(https://|ssh://git@)github.com/([^/]*)/([^/]*)`).Groups[2].Value)</EndjinGitHubOrg>
-            <EndjinGitHubProject>$([System.Text.RegularExpressions.Regex]::Match($(_EndjinUrl), `(https://|ssh://[^@]*@)github.com/([^/]*)/([^/]*)(\.git)?`).Groups[3].Value)</EndjinGitHubProject>
-            <EndjinGitHubProject Condition="$(EndjinGitHubProject.EndsWith('.git'))">$(EndjinGitHubProject.Substring(0, $(EndjinGitHubProject.LastIndexOf('.'))))</EndjinGitHubProject>
+        <PropertyGroup Condition="'$(EndjinProjectIsInGitHubRepo)' == 'true'">
+            <EndjinGitHubOrg>$([System.Text.RegularExpressions.Regex]::Match($(_EndjinUrl), $(_EndjinGitHubUrlPattern)).Groups[1].Value)</EndjinGitHubOrg>
+            <EndjinGitHubProject>$([System.Text.RegularExpressions.Regex]::Match($(_EndjinUrl), $(_EndjinGitHubUrlPattern)).Groups[2].Value)</EndjinGitHubProject>
+            <EndjinGitHubUrl>https://github.com/$(EndjinGitHubOrg)/$(EndjinGitHubProject)</EndjinGitHubUrl>
         </PropertyGroup>
     </Target>
 
     <Target Name="_EndjinIssueGitHubWarningIfAppropriate" DependsOnTargets="EndjinDetectGitHub">
 
-        <Error
+        <!--
+            A warning, not an error: the build output is correct without the GitHub package, it just
+            has less package metadata. (TreatWarningsAsErrors applies to compiler warnings, not to
+            warnings from MSBuild tasks like this one, so it doesn't turn this into an error.)
+        -->
+        <Warning
             Condition=" ('$(EndjinProjectIsInGitHubRepo)' == 'true') And ('$(_EndjinGitHubPackageImported)' != 'true') And ($(EndjinDisableGitHubSourceLinkWarning) != 'true') "
-            Text="The Endjin.RecommendedPractices NuGet package stopped automatically enabling GitHub Source Link in V2. You appear to be using GitHub, so if you still want Source Link, change the reference to Endjin.RecommendedPractices.GitHub. Set the EndjinDisableGitHubSourceLinkWarning build property to true in your csproj file if you do not want Source Link."
+            Text="This project is in a GitHub repository, but it references Endjin.RecommendedPractices instead of Endjin.RecommendedPractices.GitHub. Change the reference to Endjin.RecommendedPractices.GitHub to set the package's project URL, repository type and release notes from the GitHub repository. (Source Link works with either package, because it comes from the .NET SDK.) To hide this warning, set the EndjinDisableGitHubSourceLinkWarning build property to true."
             />
     </Target>
 </Project>

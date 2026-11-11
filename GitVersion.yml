@@ -1,7 +1,22 @@
-mode: "ContinuousDeployment"
+# GitVersion 5.x configuration (ZeroFailed installs GitVersion.Tool 5.8.0), following the endjin
+# pr-autoflow convention. GitVersion 5 has no built-in 'main' branch key, so the default branch is
+# configured under the 'master' key with a regex that matches 'main'.
+# 'main' builds version as <next-version>-preview.<n>; auto_release.yml tags releases from the
+# GitVersion MajorMinorPatch value, and tag builds publish that stable version.
+mode: ContinuousDeployment
 branches:
   master:
-    regex: ^master|main|develop/.*$
+    regex: ^main$
     tag: preview
     increment: patch
-next-version: "2.1"
+  dependabot-pr:
+    regex: ^dependabot
+    tag: dependabot
+    source-branches:
+    - develop
+    - master
+    - release
+    - feature
+    - support
+    - hotfix
+next-version: "3.0"

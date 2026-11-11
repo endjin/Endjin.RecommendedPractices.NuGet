@@ -6,23 +6,44 @@
         for a NuGet package to supply solution-level content so we just check to see if the
         relevant files exist, and if not, create them.
 
-        Note that this typically results in a warning directly after adding this NuGet package
-        to a project for the first time in any solution, because the files won't get copied
-        until you first build, but VS runs analyzers immediately to provide instant feedback.
-        Once you've built, this warning shouldn't reappear.
+        The files are only copied during a build, and the .NET SDK decides which of them apply to
+        a compilation before that. So until they exist, Endjin.Common.Net.props supplies the same
+        settings from the package itself: its copy of stylecop.json, and the C# settings of the
+        default .editorconfig as a global analyzer config (Endjin.CodeAnalysis.globalconfig).
 
-        The automatic copying of these files can be disabled with:
+        The automatic copying of stylecop.json can be disabled with:
 
         <EndjinDisableCodeAnalysis>true</EndjinDisableCodeAnalysis>
 
-        which will also prevent the addition of the reference to StyleCop.Analyzers.
+        which also removes the StyleCop.Analyzers, Roslynator.Analyzers and
+        Microsoft.VisualStudio.Threading.Analyzers analyzers from compilation (see
+        _EndjinRemoveCodeAnalysisAnalyzers below). The .editorconfig (and the
+        global analyzer config) can be turned off with:
+
+        <EndjinDisableCreateEditorConfig>true</EndjinDisableCreateEditorConfig>
+
+        The copies are a convenience, so that the settings are visible and easy to change. The
+        build doesn't depend on them: the package supplies the same stylecop.json settings, C#
+        .editorconfig settings and package icon itself (see Endjin.Common.Net.props and
+        _EndjinIncludePackageIcon below). So a solution that doesn't want a NuGet package writing
+        files into its solution folder can turn off all three copies, and keep the settings,
+        with:
+
+        <EndjinDisableSolutionLevelFiles>true</EndjinDisableSolutionLevelFiles>
+
+        See docs/adr/0006-solution-level-files-are-optional.md.
     -->
     <Target Name="_EndjinEnsureCodeAnalysisRuleSet" AfterTargets="BeforeBuild" BeforeTargets="CoreBuild">
-        <Copy Condition="($(EndjinDisableCodeAnalysis) != 'true') and (!Exists('$(SolutionDir)stylecop.json'))" SourceFiles="$(MSBuildThisFileDirectory)stylecop.json" DestinationFiles="$(SolutionDir)stylecop.json" />
+        <Copy Condition="($(EndjinDisableCodeAnalysis) != 'true') and ($(EndjinDisableSolutionLevelFiles) != 'true') and (!Exists('$(SolutionDir)stylecop.json'))" SourceFiles="$(MSBuildThisFileDirectory)stylecop.json" DestinationFiles="$(SolutionDir)stylecop.json" />
     </Target>
 
+    <!--
+        The package ships the default as default.editorconfig, not .editorconfig, because
+        "dotnet pack" always leaves out files whose names start with a dot. It is copied to
+        the solution folder under its real name.
+    -->
     <Target Name="_EndjinEnsureEditorConfig" AfterTargets="BeforeBuild" BeforeTargets="CoreBuild">
-        <Copy Condition="($(EndjinDisableCreateEditorConfig) != 'true') and (!Exists('$(SolutionDir).editorconfig'))" SourceFiles="$(MSBuildThisFileDirectory)/.editorconfig" DestinationFiles="$(SolutionDir).editorconfig" />
+        <Copy Condition="($(EndjinDisableCreateEditorConfig) != 'true') and ($(EndjinDisableSolutionLevelFiles) != 'true') and (!Exists('$(SolutionDir).editorconfig'))" SourceFiles="$(MSBuildThisFileDirectory)default.editorconfig" DestinationFiles="$(SolutionDir).editorconfig" />
     </Target>
 
     <!--
@@ -31,18 +52,96 @@
         after adding this package.
     -->
     <Target Name="_EndjinEnsureSolutionLevelPackageIcon" AfterTargets="BeforeBuild" BeforeTargets="CoreBuild">
-        <Copy Condition="($(IsPackable) != 'false') and ($(EndjinDisableDefaultPackageIconInclusion) != 'true') and (!Exists('$(SolutionDir)PackageIcon.png'))" SourceFiles="$(MSBuildThisFileDirectory)/DefaultPackageIcon.png" DestinationFiles="$(SolutionDir)PackageIcon.png" />
+        <Copy Condition="($(IsPackable) != 'false') and ($(EndjinDisableDefaultPackageIconInclusion) != 'true') and ($(EndjinDisableSolutionLevelFiles) != 'true') and (!Exists('$(SolutionDir)PackageIcon.png'))" SourceFiles="$(MSBuildThisFileDirectory)DefaultPackageIcon.png" DestinationFiles="$(SolutionDir)PackageIcon.png" />
+    </Target>
+
+    <!--
+        Endjin.Common.NuGet.props uses the solution's PackageIcon.png if it exists when the project
+        is loaded. It doesn't exist yet on the first build of a clean checkout that doesn't commit it
+        (the copy above happens during the build), or ever when EndjinDisableSolutionLevelFiles is
+        true. Without this target, those packages would silently have no icon. So when packing, if
+        no icon has been set, we use the solution's PackageIcon.png if it now exists, and otherwise
+        the package's default icon.
+    -->
+    <Target
+        Name="_EndjinIncludePackageIcon"
+        BeforeTargets="_GetPackageFiles;GenerateNuspec"
+        Condition="('$(IsPackable)' != 'false') and ('$(EndjinDisableDefaultPackageIconInclusion)' != 'true') and ('$(PackageIcon)' == '')">
+        <PropertyGroup>
+            <_EndjinPackageIconFile Condition="Exists('$(SolutionDir)PackageIcon.png')">$(SolutionDir)PackageIcon.png</_EndjinPackageIconFile>
+            <_EndjinPackageIconFile Condition="'$(_EndjinPackageIconFile)' == ''">$(MSBuildThisFileDirectory)DefaultPackageIcon.png</_EndjinPackageIconFile>
+            <PackageIcon>PackageIcon.png</PackageIcon>
+        </PropertyGroup>
+        <ItemGroup>
+            <None Include="$(_EndjinPackageIconFile)" Link="PackageIcon.png" Pack="true" PackagePath="PackageIcon.png" />
+        </ItemGroup>
+    </Target>
+
+    <!--
+        Documentation templates. A project that sets
+
+        <EndjinCreateDocumentationTemplates>true</EndjinCreateDocumentationTemplates>
+
+        gets the files under templates/ in this package copied into its repository, at the same
+        relative paths (for example docs/releasing/Releasing.md, a procedure for releasing and for
+        withdrawing a bad release, and docs/adr/0000-adr-template.md). They go in the root of the
+        Git repository the project is in, or in the solution folder if it isn't in one. As with
+        .editorconfig, a file that already exists is never overwritten, so the copies are yours to
+        edit. This is off by default: unlike the code analysis settings, documentation isn't
+        something every project needs.
+    -->
+    <Target
+        Name="_EndjinCreateDocumentationTemplates"
+        AfterTargets="BeforeBuild"
+        BeforeTargets="CoreBuild"
+        DependsOnTargets="EndjinDetectGitHub"
+        Condition="'$(EndjinCreateDocumentationTemplates)' == 'true'">
+        <PropertyGroup>
+            <_EndjinDocumentationRoot>$(EndjinRepositoryRoot)</_EndjinDocumentationRoot>
+            <_EndjinDocumentationRoot Condition="'$(_EndjinDocumentationRoot)' == ''">$(SolutionDir)</_EndjinDocumentationRoot>
+        </PropertyGroup>
+        <ItemGroup>
+            <_EndjinDocumentationTemplate Include="$(MSBuildThisFileDirectory)templates\**\*" />
+            <_EndjinDocumentationTemplate>
+                <Destination>$(_EndjinDocumentationRoot)%(RecursiveDir)%(Filename)%(Extension)</Destination>
+            </_EndjinDocumentationTemplate>
+        </ItemGroup>
+        <Copy
+            SourceFiles="@(_EndjinDocumentationTemplate)"
+            DestinationFiles="%(_EndjinDocumentationTemplate.Destination)"
+            Condition="!Exists('%(_EndjinDocumentationTemplate.Destination)')" />
     </Target>
 
     <!--
         Non-packable projects will not be distributed through NuGet and so in general we don't
-        require all public elements to be documented, so we disable SA1600. Projects that want
-        to keep this can opt out with this setting:
+        require all public elements to be documented, so we disable SA1600 (StyleCop) and CS1591
+        (the compiler's own missing-XML-comment warning, which GenerateDocumentationFile turns on
+        for every project). Projects that want to keep these can opt out with this setting:
 
         <EndjinLeaveWarningsEnabledOnNonPackableProject>true</EndjinLeaveWarningsEnabledOnNonPackableProject>
     -->
     <PropertyGroup Condition="($(IsPackable) == 'false') and ($(EndjinLeaveWarningsEnabledOnNonPackableProject) != 'true')">
-        <NoWarn>$(NoWarn);SA1600</NoWarn>
+        <NoWarn>$(NoWarn);SA1600;CS1591</NoWarn>
+    </PropertyGroup>
+
+    <!--
+        Endjin.Common.Net.props makes warnings errors in Release builds when the configuration is
+        passed in (dotnet build -c Release, Visual Studio, dotnet pack). A project can also choose
+        its configuration in its own file, which is only evaluated after our .props, so we check
+        again here, where the final configuration is known.
+
+        By now the .NET SDK has set TreatWarningsAsErrors to false (its default, applied after our
+        .props), so its value can't tell us whether the project chose false. Instead: our .props
+        notes when nothing had set it before the project (_EndjinDecidesTreatWarningsAsErrors),
+        and we look at the project file itself. If the project file sets TreatWarningsAsErrors,
+        its value is kept, whatever it is. (Directory.Build.targets is imported after this file,
+        so a value set there wins anyway.)
+    -->
+    <PropertyGroup Condition="'$(_EndjinDecidesTreatWarningsAsErrors)' == 'true' And '$(Configuration)' == 'Release' And '$(TreatWarningsAsErrors)' != 'true' And Exists('$(MSBuildProjectFullPath)')">
+        <_EndjinProjectSetsTreatWarningsAsErrors>$([System.Text.RegularExpressions.Regex]::IsMatch($([System.IO.File]::ReadAllText('$(MSBuildProjectFullPath)')), '&lt;TreatWarningsAsErrors[\s&gt;]'))</_EndjinProjectSetsTreatWarningsAsErrors>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(_EndjinDecidesTreatWarningsAsErrors)' == 'true' And '$(Configuration)' == 'Release' And '$(TreatWarningsAsErrors)' != 'true' And '$(_EndjinProjectSetsTreatWarningsAsErrors)' == 'False'">
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
     <!--
@@ -61,17 +160,36 @@
         </None>
     </ItemGroup>
 
-    <ItemGroup>
-        <!--
-            Reference to preview version because there hasn't been a non-preview release in an age,
-            the language support is a long way behind on the last non-preview version, and the
-            package author says to use the preview versions.
-        -->
-        <PackageReference Condition="$(EndjinDisableCodeAnalysis) != 'true'" Include="StyleCop.Analyzers" Version="1.2.0-beta.556">
-            <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
-        <PackageReference Condition="$(EndjinDisableCodeAnalysis) != 'true'" Include="Roslynator.Analyzers" Version="4.15.0">
-            <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
-    </ItemGroup>
+    <!--
+        StyleCop.Analyzers, Roslynator.Analyzers and Microsoft.VisualStudio.Threading.Analyzers come
+        in as dependencies of this package (see the nuspec), so they can't be left out of restore
+        conditionally. Instead, when
+        EndjinDisableCodeAnalysis is true, we remove their analyzers after NuGet has resolved
+        them. ResolveLockFileAnalyzers also runs in Visual Studio design-time builds, so the
+        IDE respects the setting too.
+    -->
+    <Target Name="_EndjinRemoveCodeAnalysisAnalyzers" AfterTargets="ResolveLockFileAnalyzers" Condition="'$(EndjinDisableCodeAnalysis)' == 'true'">
+        <ItemGroup>
+            <Analyzer Remove="@(Analyzer)" Condition="'%(Analyzer.NuGetPackageId)' == 'StyleCop.Analyzers' Or '%(Analyzer.NuGetPackageId)' == 'Roslynator.Analyzers' Or '%(Analyzer.NuGetPackageId)' == 'Microsoft.VisualStudio.Threading.Analyzers'" />
+        </ItemGroup>
+    </Target>
+
+    <!--
+        This package and its analyzer dependencies are for building the consuming project only.
+        NuGet tooling adds development dependencies with PrivateAssets="all", which stops them
+        flowing into packages that the consuming project produces. A hand-written reference
+        without it would make the produced package depend on Endjin.RecommendedPractices (and,
+        through it, the analyzers), so we fail the pack in that case.
+    -->
+    <Target Name="_EndjinVerifyPrivateAssets" BeforeTargets="GenerateNuspec">
+        <ItemGroup>
+            <_EndjinNonPrivateReference
+                Include="@(PackageReference)"
+                Condition="('%(PackageReference.Identity)' == 'Endjin.RecommendedPractices' Or '%(PackageReference.Identity)' == 'Endjin.RecommendedPractices.GitHub') And '%(PackageReference.PrivateAssets)' != 'all'" />
+        </ItemGroup>
+        <Error
+            Condition="'@(_EndjinNonPrivateReference)' != ''"
+            Text="The PackageReference to %(_EndjinNonPrivateReference.Identity) must set PrivateAssets to all, or the package this project produces will depend on it. Change the reference to: &lt;PackageReference Include=&quot;%(_EndjinNonPrivateReference.Identity)&quot; Version=&quot;...&quot; PrivateAssets=&quot;all&quot; /&gt;"
+            />
+    </Target>
 </Project>
