@@ -35,7 +35,7 @@
       PackageIconUrl has been deprecated by NuGet, so we need to use <PackageIcon>.
 
       The Endjin.RecommendedPractices NuGet package presumes that the icon lives in
-      the parent directory, and is called PackageIcon.png. You can disable this
+      the solution folder, and is called PackageIcon.png. You can disable this
       presumption by setting this property:
 
       <EndjinDisableDefaultPackageIconInclusion>true</EndjinDisableDefaultPackageIconInclusion>
@@ -70,16 +70,13 @@
 
   <ItemGroup Condition="($(IsPackable) != 'false') and ($(EndjinDisableDefaultPackageIconInclusion) != 'true') and (Exists('$(SolutionDir)PackageIcon.png'))">
     <!--
-      We can't use $(SolutionDir) because that's set to the normal solution folder in "dotnet pack"
-      builds, because the Azure DevOps dotnet task runs "dotnet pack" once for each csproj instead
-      of for the whole solution. So we just have to presume it's in the parent folder. In cases
-      where that's not true, prjects can set
-
-      <EndjinDisableDefaultPackageIconInclusion>true</EndjinDisableDefaultPackageIconInclusion>
-
-      and add the package icon themselves.
+      Use the same path as the condition above, and as the target that copies the default icon
+      (Endjin.Common.Net.targets). When a single project is built or packed on its own, the build
+      system doesn't set SolutionDir, and Endjin.Common.Net.props sets it to the project's parent
+      folder. That's why Endjin.RecommendedPractices.props imports Endjin.Common.Net.props before
+      this file.
     -->
-    <None Include="../PackageIcon.png" Pack="true" PackagePath="\"/>
+    <None Include="$(SolutionDir)PackageIcon.png" Link="PackageIcon.png" Pack="true" PackagePath="\"/>
   </ItemGroup>
 
 </Project>

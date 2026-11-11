@@ -16,7 +16,7 @@
     to use these should only do so in tasks that depend on EndjinDetectGitHub.
 
         EndjinProjectIsInGitRepo        true if the project is in a folder associated with a Git repo
-        EndjinProjectIsInGitHubRepo     true if the project is in a folder associated with a Git repo
+        EndjinProjectIsInGitHubRepo     true if the project is in a Git repo whose remote is on GitHub, otherwise false
         EndjinGitHubUrl                 The URL of the GitHub project
         EndjinGitHubOrg                 The GitHub organization/account name
         EndjinGitHubProject             The GitHub project name
@@ -62,12 +62,15 @@
 
         <PropertyGroup Condition="'$(EndjinProjectIsInGitRepo)'=='true'">
             <EndjinProjectIsInGitHubRepo Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(_EndjinUrl), `(https://|ssh://[^@]*@)github.com/([^/]*)/([^/]*)`))">true</EndjinProjectIsInGitHubRepo>
-            <EndjinProjectIsInGitHubRepo Condition="'$(EndjinProjectIsInGitRepo)'==''">false</EndjinProjectIsInGitHubRepo>
+        </PropertyGroup>
+        <PropertyGroup>
+            <!-- Not GitHub, or not a Git repo at all. -->
+            <EndjinProjectIsInGitHubRepo Condition="'$(EndjinProjectIsInGitHubRepo)'==''">false</EndjinProjectIsInGitHubRepo>
         </PropertyGroup>
 
         <PropertyGroup Condition="'$(EndjinProjectIsInGitHubRepo)'=='true'">
             <EndjinGitHubUrl>$(_EndjinUrl)</EndjinGitHubUrl>
-            <EndjinGitHubOrg>$([System.Text.RegularExpressions.Regex]::Match($(_EndjinUrl), `(https://|ssh://git@)github.com/([^/]*)/([^/]*)`).Groups[2].Value)</EndjinGitHubOrg>
+            <EndjinGitHubOrg>$([System.Text.RegularExpressions.Regex]::Match($(_EndjinUrl), `(https://|ssh://[^@]*@)github.com/([^/]*)/([^/]*)`).Groups[2].Value)</EndjinGitHubOrg>
             <EndjinGitHubProject>$([System.Text.RegularExpressions.Regex]::Match($(_EndjinUrl), `(https://|ssh://[^@]*@)github.com/([^/]*)/([^/]*)(\.git)?`).Groups[3].Value)</EndjinGitHubProject>
             <EndjinGitHubProject Condition="$(EndjinGitHubProject.EndsWith('.git'))">$(EndjinGitHubProject.Substring(0, $(EndjinGitHubProject.LastIndexOf('.'))))</EndjinGitHubProject>
         </PropertyGroup>

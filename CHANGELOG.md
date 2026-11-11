@@ -24,6 +24,7 @@ These changes will be released as version 3.0.0. See also the [v3 release notes]
 - Updated the `StyleCop.Analyzers` reference from 1.2.0-beta.556 to 1.3.180.
 - Updated the `Roslynator.Analyzers` reference from 4.13.1 to 5.0.1.
 - Updated the default `Copyright` year to 2026.
+- **Breaking:** the `packages.lock.json` check now applies to `WinExe` projects (such as WPF and Windows Forms apps) as well as `Exe` projects. A `WinExe` project without lock file settings now fails with the same error. Add the settings the error shows, or set `EndjinDisableAutoPackagesLock` to `true`.
 
 ### Removed
 
@@ -35,6 +36,10 @@ These changes will be released as version 3.0.0. See also the [v3 release notes]
 - The StyleCop and Roslynator analyzers never reached consuming projects. They were declared as `PackageReference` items in the package's build targets, which NuGet restore doesn't read, so they were never restored or run. This was true from the first release, so none of the analyzer references listed in earlier versions of this changelog had any effect.
 - StyleCop now uses the package's `stylecop.json` settings on the first build of a clean checkout, before the package has copied `stylecop.json` into the solution folder. Previously StyleCop used its defaults for that build, so rules such as SA1636 (file header copyright text) failed.
 - `Endjin.RecommendedPractices.GitHub` no longer sets invalid `RepositoryUrl`, `PackageProjectUrl` and `PackageReleaseNotes` values (such as `https://github.com//.git`) when it cannot find a GitHub repository.
+- Packing a project that is not directly below its solution folder no longer fails with error NU5019 (`PackageIcon.png` not found). The package icon is now always included from the solution folder, where the package puts it.
+- `EndjinProjectIsInGitHubRepo` is now `false` for projects that are not in a GitHub repository. Previously it was left empty.
+- `EndjinGitHubOrg` is now set for `ssh://` remotes whose user is not `git`.
+- Removed stray characters (`']`) from the end of the error shown when a project does not import `Endjin.Project.props`.
 
 ## [2.1.18] - 2025-03-13
 
