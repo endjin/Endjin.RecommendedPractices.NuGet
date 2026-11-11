@@ -42,6 +42,7 @@ When you add a reference to this package via NuGet, it does the following:
 * turns off the more vexing Roslynator and StyleCop rules
 * requires C# files to end with a newline (the default for most editors and AI coding tools)
 * provides default `stylecop.json`, `.editorconfig` and `PackageIcon.png` files at the solution level if you don't yet have these. The build doesn't depend on these copies: the package supplies the same settings and icon itself, so set `EndjinDisableSolutionLevelFiles` to `true` if you don't want the files (see [ADR 0006](docs/adr/0006-solution-level-files-are-optional.md))
+* can add documentation templates to your repository, such as a procedure for releasing and withdrawing a bad release, and an ADR template (set `EndjinCreateDocumentationTemplates` to `true`; existing files are never overwritten)
 * detects whether you're building a NuGet package or a non-packaged target, and doesn't require XML documentation in non-packaged targets (unless you ask it to)
 * ensures that if you have a `local.settings.json` file, it is copied to the output folder when it changes
 * checks that projects producing runnable artifacts (such as console apps, test projects and Azure Functions) use `packages.lock.json` files

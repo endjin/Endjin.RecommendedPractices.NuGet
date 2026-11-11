@@ -42,3 +42,11 @@ package reference does, so we didn't adopt them.
 * Solutions can choose between editable copies of the settings (the default) and no solution-level files at all.
 * The C# settings exist in two files in this repository, `default.editorconfig` and
   `Endjin.CodeAnalysis.globalconfig`. A spec checks that they stay the same.
+
+## Documentation templates
+
+Issue #24 asked for a way to set up documentation in each repository, such as a procedure for withdrawing a bad
+release. This uses the same copy-if-missing approach, but documentation belongs to the whole repository, not to the
+solution, and not every repository wants it. So setting `EndjinCreateDocumentationTemplates` to `true` copies the
+package's documentation templates into the root of the Git repository (or the solution folder, outside a Git
+repository), and the package never overwrites them. It is off by default.

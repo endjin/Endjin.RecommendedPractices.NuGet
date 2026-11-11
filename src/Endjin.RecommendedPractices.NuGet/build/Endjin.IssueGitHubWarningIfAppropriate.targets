@@ -18,6 +18,7 @@
     to use these should only do so in targets that depend on EndjinDetectGitHub.
 
         EndjinProjectIsInGitRepo        true if the project is in a Git repo, otherwise false
+        EndjinRepositoryRoot            The root folder of the Git working tree (with a trailing slash), if in a Git repo
         EndjinProjectIsInGitHubRepo     true if the project is in a Git repo whose remote is on GitHub, otherwise false
         EndjinGitHubUrl                 The URL of the GitHub project (https://github.com/org/project)
         EndjinGitHubOrg                 The GitHub organization/account name
@@ -53,6 +54,12 @@
         <PropertyGroup Condition="'$(_EndjinGitDir)' == '' And '$(_EndjinGitFileRoot)' != ''">
             <_EndjinGitFileContent>$([System.IO.File]::ReadAllText('$(_EndjinGitFileRoot)/.git').Trim())</_EndjinGitFileContent>
             <_EndjinGitDir Condition="$(_EndjinGitFileContent.StartsWith('gitdir:'))">$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine('$(_EndjinGitFileRoot)', $(_EndjinGitFileContent.Substring(7).Trim())))))</_EndjinGitDir>
+        </PropertyGroup>
+
+        <!-- The working tree's root: the folder holding the .git folder or file that was used. -->
+        <PropertyGroup Condition="'$(_EndjinGitDir)' != ''">
+            <EndjinRepositoryRoot Condition="'$(_EndjinGitFolderRoot)' != '' And $(_EndjinGitFolderRoot.Length) &gt;= $(_EndjinGitFileRoot.Length)">$([MSBuild]::EnsureTrailingSlash('$(_EndjinGitFolderRoot)'))</EndjinRepositoryRoot>
+            <EndjinRepositoryRoot Condition="'$(EndjinRepositoryRoot)' == ''">$([MSBuild]::EnsureTrailingSlash('$(_EndjinGitFileRoot)'))</EndjinRepositoryRoot>
         </PropertyGroup>
 
         <!--

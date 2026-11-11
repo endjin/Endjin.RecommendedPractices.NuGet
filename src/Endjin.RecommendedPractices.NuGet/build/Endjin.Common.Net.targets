@@ -78,6 +78,41 @@
     </Target>
 
     <!--
+        Documentation templates. A project that sets
+
+        <EndjinCreateDocumentationTemplates>true</EndjinCreateDocumentationTemplates>
+
+        gets the files under templates/ in this package copied into its repository, at the same
+        relative paths (for example docs/releasing/Releasing.md, a procedure for releasing and for
+        withdrawing a bad release, and docs/adr/0000-adr-template.md). They go in the root of the
+        Git repository the project is in, or in the solution folder if it isn't in one. As with
+        .editorconfig, a file that already exists is never overwritten, so the copies are yours to
+        edit. This is off by default: unlike the code analysis settings, documentation isn't
+        something every project needs.
+    -->
+    <Target
+        Name="_EndjinCreateDocumentationTemplates"
+        AfterTargets="BeforeBuild"
+        BeforeTargets="CoreBuild"
+        DependsOnTargets="EndjinDetectGitHub"
+        Condition="'$(EndjinCreateDocumentationTemplates)' == 'true'">
+        <PropertyGroup>
+            <_EndjinDocumentationRoot>$(EndjinRepositoryRoot)</_EndjinDocumentationRoot>
+            <_EndjinDocumentationRoot Condition="'$(_EndjinDocumentationRoot)' == ''">$(SolutionDir)</_EndjinDocumentationRoot>
+        </PropertyGroup>
+        <ItemGroup>
+            <_EndjinDocumentationTemplate Include="$(MSBuildThisFileDirectory)templates\**\*" />
+            <_EndjinDocumentationTemplate>
+                <Destination>$(_EndjinDocumentationRoot)%(RecursiveDir)%(Filename)%(Extension)</Destination>
+            </_EndjinDocumentationTemplate>
+        </ItemGroup>
+        <Copy
+            SourceFiles="@(_EndjinDocumentationTemplate)"
+            DestinationFiles="%(_EndjinDocumentationTemplate.Destination)"
+            Condition="!Exists('%(_EndjinDocumentationTemplate.Destination)')" />
+    </Target>
+
+    <!--
         Non-packable projects will not be distributed through NuGet and so in general we don't
         require all public elements to be documented, so we disable SA1600 (StyleCop) and CS1591
         (the compiler's own missing-XML-comment warning, which GenerateDocumentationFile turns on
@@ -87,6 +122,18 @@
     -->
     <PropertyGroup Condition="($(IsPackable) == 'false') and ($(EndjinLeaveWarningsEnabledOnNonPackableProject) != 'true')">
         <NoWarn>$(NoWarn);SA1600;CS1591</NoWarn>
+    </PropertyGroup>
+
+    <!--
+        Endjin.Common.Net.props makes warnings errors in Release builds when the configuration is
+        passed in (dotnet build -c Release, Visual Studio, dotnet pack). A project can also choose
+        its configuration in its own file, which is only evaluated after our .props, so we check
+        again here, where the final configuration is known. Our .props leaves exactly "False"
+        (capital F) when it couldn't decide; the ordinal comparison below tells that apart from a
+        value the project set itself (such as "false"), which is kept.
+    -->
+    <PropertyGroup Condition="$(TreatWarningsAsErrors.Equals('False')) And '$(Configuration)' == 'Release'">
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
     <!--

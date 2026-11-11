@@ -63,16 +63,25 @@
     every analyzer.
 
     Configuration is only known here when it is passed in (dotnet build -c Release, Visual Studio,
-    dotnet pack): the .NET SDK sets its Debug default after this file. That's enough, because a
-    Debug build is exactly the case where we don't want warnings to be errors.
+    dotnet pack): the .NET SDK sets its Debug default after this file. When it's Release, we set
+    TreatWarningsAsErrors to true here, so that anything derived from it early in the build sees
+    the final value.
+
+    Otherwise we set it to "False", with a capital F. MSBuild treats that as false like any other
+    spelling, and it stops the .NET SDK's own default (false, which Microsoft.NET.Sdk.props sets
+    after this file) from applying. A project can still choose its configuration in its own file,
+    after this. So Endjin.Common.Net.targets, which runs once the final configuration is known,
+    changes exactly "False" to true in Release builds. A value the project sets itself, such as
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>, is spelled differently, so it's kept.
 
     A project (or Directory.Build.props) that sets TreatWarningsAsErrors itself keeps its value,
     so you can make warnings errors in every configuration with:
 
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   -->
-  <PropertyGroup Condition="'$(TreatWarningsAsErrors)' == '' And '$(Configuration)' == 'Release'">
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  <PropertyGroup Condition="'$(TreatWarningsAsErrors)' == ''">
+    <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors Condition="'$(Configuration)' != 'Release'">False</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup>

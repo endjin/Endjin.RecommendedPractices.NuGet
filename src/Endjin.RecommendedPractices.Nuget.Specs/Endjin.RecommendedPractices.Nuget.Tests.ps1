@@ -235,8 +235,11 @@ internal static class Program
     function Invoke-Scenario {
         param ([string] $Dir, [string[]] $Arguments, [hashtable] $Environment = @{}, [string] $Configuration = 'Release')
 
-        # The command (e.g. 'build') must stay first.
-        $Arguments = @($Arguments[0], "-p:Configuration=$Configuration") + @($Arguments | Select-Object -Skip 1)
+        # The command (e.g. 'build') must stay first. An empty -Configuration passes none, so the
+        # project's own setting (or the SDK's Debug default) applies.
+        if ($Configuration) {
+            $Arguments = @($Arguments[0], "-p:Configuration=$Configuration") + @($Arguments | Select-Object -Skip 1)
+        }
 
         $variables = @{ TF_BUILD = $null; GITHUB_ACTIONS = $null }
         foreach ($name in $Environment.Keys) { $variables[$name] = $Environment[$name] }
@@ -464,6 +467,24 @@ Describe 'Project conventions' {
         $result = Invoke-Scenario $dir @('build', 'Proj/Proj.csproj') -Configuration Debug
         $result.ExitCode | Should -Not -Be 0
         $result.Output | Should -Match 'error CS0168'
+    }
+
+    It 'treats warnings as errors when the project file itself selects the Release configuration' {
+        # No configuration is passed in, so the package's .props sees none; its .targets must apply the rule.
+        $code = $houseStyleClass.Replace('return DateTimeOffset.UtcNow;', "int unused;`r`n        return DateTimeOffset.UtcNow;")
+        $dir = New-Scenario -Name 'warnings-release-in-project' -ProjectXml (New-ProjectXml -Properties '<Configuration>Release</Configuration>') -Files @{ 'Proj/Widget.cs' = $code }
+        $result = Invoke-Scenario $dir @('build', 'Proj/Proj.csproj') -Configuration ''
+        $result.ExitCode | Should -Not -Be 0
+        $result.Output | Should -Match 'error CS0168'
+    }
+
+    It 'keeps TreatWarningsAsErrors false when the project sets it, in a Release build' {
+        $code = $houseStyleClass.Replace('return DateTimeOffset.UtcNow;', "int unused;`r`n        return DateTimeOffset.UtcNow;")
+        $properties = '<Configuration>Release</Configuration><TreatWarningsAsErrors>false</TreatWarningsAsErrors>'
+        $dir = New-Scenario -Name 'warnings-release-opt-out' -ProjectXml (New-ProjectXml -Properties $properties) -Files @{ 'Proj/Widget.cs' = $code }
+        $result = Invoke-Scenario $dir @('build', 'Proj/Proj.csproj') -Configuration ''
+        $result.ExitCode | Should -Be 0 -Because $result.Output
+        $result.Output | Should -Match 'warning CS0168'
     }
 
     It 'requires XML documentation on public members of a packable project' {
@@ -730,6 +751,38 @@ Describe 'GitHub support' {
             $nuspec = Get-PackageEntryText (Join-Path $projectDir 'out/Proj.1.0.0.nupkg') 'Proj.nuspec'
             $nuspec | Should -Match '<projectUrl>https://github\.com/acme/widgets</projectUrl>'
             $nuspec | Should -Match '<releaseNotes>See https://github\.com/acme/widgets/releases/</releaseNotes>'
+        }
+        finally {
+            Remove-Item $repo -Force -Recurse -ErrorAction SilentlyContinue
+        }
+    }
+
+    It 'adds documentation templates to the repository root only when EndjinCreateDocumentationTemplates is true, without overwriting existing files' {
+        # Outside this repository, so the templates don't land in this repository's own docs folder.
+        $repo = Join-Path ([System.IO.Path]::GetTempPath()) "Endjin.RecommendedPractices.Specs.DocTemplates"
+        Remove-Item $repo -Force -Recurse -ErrorAction SilentlyContinue
+        $projectDir = Join-Path $repo 'Solutions/Proj'
+        New-Item -ItemType Directory -Force -Path $projectDir | Out-Null
+        try {
+            git -C $repo init -q
+            [System.IO.File]::WriteAllText((Join-Path $projectDir 'Proj.csproj'), (New-ProjectXml -Package 'Endjin.RecommendedPractices'))
+            [System.IO.File]::WriteAllText((Join-Path $projectDir 'Widget.cs'), $houseStyleClass)
+
+            # Off by default.
+            $result = Invoke-Scenario $projectDir @('build', 'Proj.csproj')
+            $result.ExitCode | Should -Be 0 -Because $result.Output
+            (Join-Path $repo 'docs') | Should -Not -Exist
+
+            # Turned on: the templates go in the repository root (not the solution folder), and an
+            # existing file is left alone.
+            $existingAdrTemplate = Join-Path $repo 'docs/adr/0000-adr-template.md'
+            New-Item -ItemType Directory -Force -Path (Split-Path $existingAdrTemplate) | Out-Null
+            [System.IO.File]::WriteAllText($existingAdrTemplate, 'our own template')
+            $result = Invoke-Scenario $projectDir @('build', 'Proj.csproj', '-p:EndjinCreateDocumentationTemplates=true')
+            $result.ExitCode | Should -Be 0 -Because $result.Output
+            (Join-Path $repo 'docs/releasing/Releasing.md') | Should -Exist
+            [System.IO.File]::ReadAllText($existingAdrTemplate) | Should -Be 'our own template'
+            (Join-Path $repo 'Solutions/docs') | Should -Not -Exist
         }
         finally {
             Remove-Item $repo -Force -Recurse -ErrorAction SilentlyContinue

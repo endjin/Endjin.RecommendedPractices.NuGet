@@ -21,6 +21,7 @@
 
 * Warnings are errors only in Release builds, so Debug builds no longer fail on warnings while you're experimenting. CI and packaging build Release, so warnings still block merging and shipping. Set `TreatWarningsAsErrors` to `true` in your project (or `Directory.Build.props`) to keep warnings as errors in every configuration.
 * Set `EndjinDisableSolutionLevelFiles` to `true` if you don't want the package to write `.editorconfig`, `stylecop.json` and `PackageIcon.png` into your solution folder. The settings and icon still apply from the package's own copies.
+* Set `EndjinCreateDocumentationTemplates` to `true` to have the package add documentation templates to your repository root if they don't exist yet: a release and bad-release procedure (`docs/releasing/Releasing.md`) and an ADR template (`docs/adr/0000-adr-template.md`).
 * The first pack of a clean checkout now includes the package icon, even if `PackageIcon.png` doesn't exist yet.
 * GitHub detection reads the Git configuration directly. It works at any depth below the repository root, in worktrees and submodules, and with `git@github.com:` remotes.
 * RCS1089 (use `++` instead of `+= 1`) is explicitly turned off.
