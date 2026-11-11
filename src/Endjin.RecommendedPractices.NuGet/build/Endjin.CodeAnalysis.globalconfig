@@ -35,7 +35,7 @@ csharp_indent_switch_labels = true
 
 csharp_new_line_before_catch = true
 csharp_new_line_before_else = true
-csharp_new_line_before_open_brace = object_collection, object_collection_array_initalizers, accessors, lambdas, control_blocks, methods, properties, types
+csharp_new_line_before_open_brace = object_collection, object_collection_array_initializers, accessors, lambdas, control_blocks, methods, properties, types
 
 # Formatting - spacing options
 

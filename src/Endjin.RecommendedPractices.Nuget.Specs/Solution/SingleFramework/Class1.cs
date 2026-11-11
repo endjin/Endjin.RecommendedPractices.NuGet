@@ -2,7 +2,7 @@
 // Copyright (c) Endjin Limited. All rights reserved.
 // </copyright>
 
-namespace MultiFramework
+namespace SingleFramework
 {
     /// <summary>
     /// Class1.

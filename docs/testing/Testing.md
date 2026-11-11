@@ -41,7 +41,7 @@ You can use the local package feed by adding a `NuGet.config` file to any .NET s
   <packageSources>
     <add key="NuGetLocal" value="C:\dev\NuGetLocal" />
   </packageSources>
-</configuration>```
+</configuration>
 ```
 
 This works for Visual Studio. It's not clear if it will work for command line development—various Stack Overflow posts suggest you need a `<config>` section that adds the local path value under two different keys: `repositoryPath` and `globalPackagesFolder`. But in my experience, this goes on to break in quite hard to diagnose ways, so I wouldn't recommend it. The alternative is to add this feed to your global feed configuration using either `dotnet nuget add source` or the Visual Studio feed settings page.

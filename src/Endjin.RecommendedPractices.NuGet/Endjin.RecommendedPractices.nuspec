@@ -9,6 +9,10 @@
         <description>Applies endjin standard practices to a .NET project.</description>
         <authors>endjin</authors>
         <icon>images\EndjinIcon.png</icon>
+        <license type="expression">Apache-2.0</license>
+        <projectUrl>https://github.com/endjin/Endjin.RecommendedPractices.NuGet</projectUrl>
+        <repository type="git" url="https://github.com/endjin/Endjin.RecommendedPractices.NuGet.git" />
+        <releaseNotes>See https://github.com/endjin/Endjin.RecommendedPractices.NuGet/blob/main/CHANGELOG.md</releaseNotes>
 
         <developmentDependency>true</developmentDependency>
         <!--
