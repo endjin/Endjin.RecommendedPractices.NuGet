@@ -33,6 +33,7 @@ These changes will be released as version 3.0.0. See also the [v3 release notes]
 ### Fixed
 
 - The StyleCop and Roslynator analyzers never reached consuming projects. They were declared as `PackageReference` items in the package's build targets, which NuGet restore doesn't read, so they were never restored or run. This was true from the first release, so none of the analyzer references listed in earlier versions of this changelog had any effect.
+- StyleCop now uses the package's `stylecop.json` settings on the first build of a clean checkout, before the package has copied `stylecop.json` into the solution folder. Previously StyleCop used its defaults for that build, so rules such as SA1636 (file header copyright text) failed.
 - `Endjin.RecommendedPractices.GitHub` no longer sets invalid `RepositoryUrl`, `PackageProjectUrl` and `PackageReleaseNotes` values (such as `https://github.com//.git`) when it cannot find a GitHub repository.
 
 ## [2.1.18] - 2025-03-13

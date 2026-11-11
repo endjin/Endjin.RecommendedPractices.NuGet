@@ -72,4 +72,15 @@
     <AdditionalFiles Include="$(SolutionDir)stylecop.json" Link="stylecop.json" />
   </ItemGroup>
 
+  <!--
+    On the first build of a clean checkout, the solution-level stylecop.json doesn't exist yet
+    when the project is evaluated: Endjin.Common.Net.targets only copies it into place during
+    the build. Without settings, StyleCop falls back to its defaults (e.g. the company name
+    "PlaceholderCompany"), so rules such as SA1636 fail every file header. So until the
+    solution has its own copy, we give StyleCop the package's copy, which has the same contents.
+  -->
+  <ItemGroup Condition="($(EndjinDisableCodeAnalysis) != 'true') and (!Exists('$(SolutionDir)stylecop.json'))">
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json" Link="stylecop.json" />
+  </ItemGroup>
+
 </Project>
